@@ -1,0 +1,43 @@
+{
+  "name": "Señas básicas (catálogo de ejemplo)",
+  "note": "Se incluyen gestos comunes como apoyo comunicativo. Puedes ampliar con imágenes/vídeos locales si lo deseas.",
+  "categories": [
+    {
+      "key": "saludos",
+      "name": "Saludos",
+      "items": [
+        {"id":"hola","label":"hola","emoji":"👋","keywords":["saludo"]},
+        {"id":"adios","label":"adiós","emoji":"👋","keywords":["despedida"]},
+        {"id":"gracias","label":"gracias","emoji":"🙏","keywords":["agradecer"]}
+      ]
+    },
+    {
+      "key": "emociones",
+      "name": "Emociones",
+      "items": [
+        {"id":"contento","label":"contento","emoji":"🙂"},
+        {"id":"triste","label":"triste","emoji":"😢"},
+        {"id":"enfado","label":"enfado","emoji":"😠"}
+      ]
+    },
+    {
+      "key": "necesidades",
+      "name": "Necesidades",
+      "items": [
+        {"id":"comer","label":"comer","emoji":"🍽️"},
+        {"id":"beber","label":"beber","emoji":"🥤"},
+        {"id":"bano","label":"baño","emoji":"🚻"}
+      ]
+    },
+    {
+      "key": "respuestas",
+      "name": "Respuestas",
+      "items": [
+        {"id":"si","label":"sí","emoji":"👍"},
+        {"id":"no","label":"no","emoji":"👎"},
+        {"id":"espera","label":"espera","emoji":"✋"}
+      ]
+    }
+  ]
+}
+

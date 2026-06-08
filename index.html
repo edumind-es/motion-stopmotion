@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="./icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#040614" />
+
+  <!-- SEO & Meta Tags -->
+  <title>Motion EDUmind · Stopmotion Educativo</title>
+  <meta name="description"
+    content="PWA profesional para crear animaciones stopmotion de forma accesible. Con soporte para pictogramas, exportación WebM/PDF, y totalmente RGPD compatible. Parte del ecosistema EDUmind." />
+  <meta name="keywords"
+    content="stopmotion, animación, educación, pictogramas, PWA, EDUmind, ARASAAC, zootropo, fenakistiscopio" />
+  <meta name="author" content="Los Mundos Edufis" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Motion EDUmind · Stopmotion Educativo" />
+  <meta property="og:description"
+    content="Crea animaciones stopmotion de forma accesible con pictogramas y exportación a múltiples formatos." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://motion.edumind.es" />
+  <meta property="og:image" content="./icons/icon-512.png" />
+  <meta property="og:site_name" content="EDUmind" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Motion EDUmind · Stopmotion Educativo" />
+  <meta name="twitter:description" content="Crea animaciones stopmotion de forma accesible con pictogramas." />
+
+  <!-- PWA -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Motion EDUmind" />
+
+  <!-- Preconnect for fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Matomo Tracking - Cookieless (Site ID: 11) -->
+  <script>
+    var _paq = window._paq = window._paq || [];
+    _paq.push(['disableCookies']);
+    _paq.push(['setDoNotTrack', true]);
+    _paq.push(['trackPageView']);
+    _paq.push(['enableLinkTracking']);
+    (function () {
+      var u = 'https://analytics.losmundosedufis.com/';
+      _paq.push(['setTrackerUrl', u + 'matomo.php']);
+      _paq.push(['setSiteId', '11']);
+      var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
+      g.async = true; g.src = u + 'matomo.js';
+      s.parentNode.insertBefore(g, s);
+    })();
+  </script>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script type="module" src="./src/main.ts"></script>
+</body>
+
+</html>

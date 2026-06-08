@@ -1,0 +1,13 @@
+ARASAAC — ARAGON PORTAL OF AUGMENTATIVE AND ALTERNATIVE COMMUNICATION
+Website: https://www.arasaac.org
+License: Creative Commons BY-NC-SA 4.0
+Attribution: "ARASAAC (http://www.arasaac.org) - Gobierno de Aragón"
+
+This app includes a local example catalog (JSON) that references labels and keywords only.
+To use ARASAAC pictograms offline, download the required images from ARASAAC and place them
+under: /static/pictos/arasaac/<category>/<id>.png (or .svg), and add an "img" property in the
+catalog entries pointing to your local file. Example:
+
+  { "id":"feliz", "label":"feliz", "img":"/static/pictos/arasaac/emociones/feliz.png", "keywords":[...] }
+
+Make sure to keep attribution and comply with the CC BY-NC-SA 4.0 terms.

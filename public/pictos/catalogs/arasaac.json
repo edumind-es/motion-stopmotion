@@ -1,0 +1,59 @@
+{
+  "name": "ARASAAC básico (catálogo de ejemplo)",
+  "license": "CC BY-NC-SA 4.0",
+  "attribution": "ARASAAC (http://www.arasaac.org) - Gobierno de Aragón",
+  "note": "Catálogo local con pictogramas ARASAAC descargados para uso sin conexión (CC BY-NC-SA 4.0). Los campos 'img' apuntan a PNG locales en /public/pictos/arasaac/.",
+  "categories": [
+    {
+      "key": "emociones",
+      "name": "Emociones",
+      "items": [
+        {"id":"feliz","label":"feliz","emoji":"🙂","img":"/pictos/arasaac/feliz.png","keywords":["contento","alegre","sonrisa"]},
+        {"id":"triste","label":"triste","emoji":"😢","keywords":["llorar","pena"]},
+        {"id":"enfadado","label":"enfadado","emoji":"😡","keywords":["ira","enojo"]},
+        {"id":"miedo","label":"miedo","emoji":"😨","keywords":["asustado","temor"]},
+        {"id":"sorpresa","label":"sorpresa","emoji":"😲","keywords":["wow","sorprendido"]}
+      ]
+    },
+    {
+      "key": "acciones",
+      "name": "Acciones",
+      "items": [
+        {"id":"comer","label":"comer","emoji":"🍽️","keywords":["almorzar","merendar","cena"]},
+        {"id":"beber","label":"beber","emoji":"🥤","keywords":["agua","jugo"]},
+        {"id":"leer","label":"leer","emoji":"📖","keywords":["libro","cuento"]},
+        {"id":"escribir","label":"escribir","emoji":"✍️","keywords":["lápiz","bolígrafo"]},
+        {"id":"correr","label":"correr","emoji":"🏃","keywords":["deporte","moverse"]},
+        {"id":"dormir","label":"dormir","emoji":"🛌","keywords":["siesta","descansar"]}
+      ]
+    },
+    {
+      "key": "escuela",
+      "name": "Escuela",
+      "items": [
+        {"id":"colegio","label":"colegio","emoji":"🏫","img":"/pictos/arasaac/escuela.png","keywords":["escuela","clase"]},
+        {"id":"maestra","label":"maestra","emoji":"🧑‍🏫","keywords":["profesora","profe"]},
+        {"id":"mochila","label":"mochila","emoji":"🎒","keywords":["bolso","cartera"]},
+        {"id":"tijeras","label":"tijeras","emoji":"✂️","keywords":["manualidades","cortar"]}
+      ]
+    },
+    {
+      "key": "comida",
+      "name": "Comida",
+      "items": [
+        {"id":"manzana","label":"manzana","emoji":"🍎","keywords":["fruta","roja"]},
+        {"id":"pan","label":"pan","emoji":"🍞","keywords":["bocadillo","tostada"]},
+        {"id":"leche","label":"leche","emoji":"🥛","keywords":["bebida","vaca"]}
+      ]
+    },
+    {
+      "key": "material",
+      "name": "Material y juego",
+      "items": [
+        {"id":"camara","label":"cámara","emoji":"🎥","img":"/pictos/arasaac/camara.png","keywords":["video","grabar","foto"]},
+        {"id":"jugar","label":"jugar","emoji":"🎲","img":"/pictos/arasaac/jugar.png","keywords":["diversión","ocio","juego"]},
+        {"id":"comer-plato","label":"comer","emoji":"🍽️","img":"/pictos/arasaac/comer.png","keywords":["almuerzo","merienda","plato"]}
+      ]
+    }
+  ]
+}
