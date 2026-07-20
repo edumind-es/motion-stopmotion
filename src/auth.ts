@@ -25,21 +25,29 @@ export interface UserProfile {
     displayName?: string
 }
 
-const isLocalUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const REDIRECT_URI = isLocalUrl ? 'http://localhost:5173/callback' : 'https://motion.edumind.es/callback';
+// Entorno: leer desde variables VITE_ con fallbacks para no romper builds sin .env.local
+const OIDC_AUTHORITY = import.meta.env.VITE_OIDC_AUTHORITY ?? 'https://auth.edumind.es/application/o/motion-v1/'
+const OIDC_CLIENT_ID = import.meta.env.VITE_OIDC_CLIENT_ID ?? '91c7eca1b29c43c90ea1eb5d96747d51'
+const APP_DOMAIN = import.meta.env.VITE_APP_DOMAIN ?? 'https://motion.edumind.es'
+const SHELL_URL_ENV = import.meta.env.VITE_SHELL_URL ?? 'https://edumind.es/dashboard'
 
+const isLocalUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const baseUrl = isLocalUrl ? window.location.origin : APP_DOMAIN;
+
+// Tokens en sessionStorage: más seguro que localStorage (no persiste entre sesiones)
+// y no accesible desde otras pestañas del mismo dominio.
 const userManager = new UserManager({
-    authority: 'https://auth.edumind.es/application/o/motion-v1/',
-    client_id: '91c7eca1b29c43c90ea1eb5d96747d51',
-    redirect_uri: REDIRECT_URI,
-    post_logout_redirect_uri: isLocalUrl ? 'http://localhost:5173/' : 'https://motion.edumind.es/',
+    authority: OIDC_AUTHORITY,
+    client_id: OIDC_CLIENT_ID,
+    redirect_uri: `${baseUrl}/callback`,
+    post_logout_redirect_uri: `${baseUrl}/`,
     response_type: 'code',
     scope: 'openid profile email offline_access',
-    userStore: new WebStorageStateStore({ store: window.localStorage }),
+    userStore: new WebStorageStateStore({ store: window.sessionStorage }),
 });
 
 export class AuthManager {
-    private static readonly SHELL_URL = 'https://edumind.es/dashboard';
+    private static readonly SHELL_URL = SHELL_URL_ENV;
 
     private user: User | null = null;
     private userTier: AccountTier = 'free';
@@ -115,6 +123,16 @@ export class AuthManager {
         this.userTier = 'free';
         this.notifyListeners();
         userManager.signoutRedirect().catch(console.error);
+    }
+
+    public getAccessToken(): string | null {
+        return this.isAuthenticated() ? (this.user?.access_token ?? null) : null
+    }
+
+    public getDisplayName(): string | null {
+        if (!this.user) return null
+        const p = this.user.profile as any
+        return p.name ?? p.preferred_username ?? p.email ?? null
     }
 
     public getShellUrl(): string {

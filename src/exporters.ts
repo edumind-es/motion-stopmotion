@@ -156,9 +156,10 @@ export async function exportWebM(options: {
   frames: FrameData[]
   fps: number
   resolution: ExportResolution
+  audioBlob?: Blob          // pista de narración opcional — se mezcla en el WebM
   onProgress?: (current: number, total: number) => void
 }): Promise<Blob> {
-  const { frames, fps, resolution, onProgress } = options
+  const { frames, fps, resolution, audioBlob, onProgress } = options
   if (!frames.length) throw new Error('No hay fotogramas para exportar')
 
   const first = frames[0]
@@ -169,14 +170,40 @@ export async function exportWebM(options: {
 
   const ctx = canvas.getContext('2d')!
   const mimeType = pickMime()
-  const stream = canvas.captureStream(fps)
-  const recorder = new MediaRecorder(stream, { mimeType })
+  const videoStream = canvas.captureStream(fps)
+
+  // Mezcla de audio: si hay narración la incluimos en el mismo MediaRecorder
+  let audioCtx: AudioContext | null = null
+  let audioSource: AudioBufferSourceNode | null = null
+  let combinedStream: MediaStream = videoStream
+
+  if (audioBlob && audioBlob.size > 0) {
+    try {
+      audioCtx = new AudioContext()
+      const audioBuffer = await audioCtx.decodeAudioData(await audioBlob.arrayBuffer())
+      audioSource = audioCtx.createBufferSource()
+      audioSource.buffer = audioBuffer
+      const destination = audioCtx.createMediaStreamDestination()
+      audioSource.connect(destination)
+      // Mezclar pistas de vídeo + audio en un único MediaStream
+      combinedStream = new MediaStream([
+        ...videoStream.getVideoTracks(),
+        ...destination.stream.getAudioTracks()
+      ])
+    } catch (e) {
+      console.warn('No se pudo preparar el audio para el WebM, exportando solo vídeo:', e)
+      audioCtx?.close()
+      audioCtx = null
+      audioSource = null
+      combinedStream = videoStream
+    }
+  }
+
+  const recorder = new MediaRecorder(combinedStream, { mimeType })
   const chunks: Blob[] = []
 
   recorder.ondataavailable = (event) => {
-    if (event.data && event.data.size > 0) {
-      chunks.push(event.data)
-    }
+    if (event.data && event.data.size > 0) chunks.push(event.data)
   }
 
   const stopped = new Promise<void>((resolve, reject) => {
@@ -185,6 +212,8 @@ export async function exportWebM(options: {
   })
 
   recorder.start()
+  // Iniciar audio en sincronía con el comienzo del vídeo
+  audioSource?.start(0)
 
   for (let index = 0; index < frames.length; index += 1) {
     const frame = frames[index]
@@ -208,7 +237,11 @@ export async function exportWebM(options: {
 
   recorder.requestData()
   recorder.stop()
+  audioSource?.stop()
   await stopped
+
+  // Liberar AudioContext
+  audioCtx?.close().catch(() => {})
 
   return new Blob(chunks, { type: mimeType })
 }

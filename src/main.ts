@@ -26,7 +26,10 @@ import { MotionGuideManager } from './motion-guide'
 import { DrawingManager } from './drawing'
 import { createPictoFrame, flattenPictoItems, loadPictoCatalogs, searchArasaac } from './pictograms'
 import { initPWA } from './pwa'
-import { clearProject } from './storage'
+import { clearProject, loadProject, persistProject, saveAudioTrack, loadAudioTrack, deleteAudioTrack } from './storage'
+import { ProjectManager } from './project-manager'
+import { AudioRecorder, AudioPlayback, formatDuration } from './audio-recorder'
+import { importVideoFile, importVideoBlob, CameraVideoRecorder } from './video-importer'
 import { authManager } from './auth'
 import { formatBytes, getProjectByteSize } from './project-metrics'
 import {
@@ -48,6 +51,12 @@ const MAX_FRAME_COUNT = 1500
 const EXPORT_STATUS_CLEAR_MS = 2600
 
 const app = document.getElementById('app')!
+const embedParams = new URLSearchParams(window.location.search)
+const isBoardEmbed = embedParams.get('embed') === '1' || embedParams.get('board') === '1'
+
+if (isBoardEmbed) {
+  document.body.dataset.edumindEmbed = 'true'
+}
 
 const navbar = document.createElement('nav')
 navbar.className = 'navbar'
@@ -62,6 +71,8 @@ navbar.innerHTML = `
     <div class="navbar__nav">
       <a href="https://edumind.es/#aplicaciones" class="navbar__link" target="_blank" rel="noopener noreferrer">Aplicaciones</a>
       <a href="https://edumind.es/#documentacion" class="navbar__link" target="_blank" rel="noopener noreferrer">Documentación</a>
+      <button class="navbar__link" id="projectsBtn" title="Gestionar proyectos">📁 Proyectos</button>
+      <span class="navbar__tier-badge" id="tierBadge" hidden></span>
       <button class="navbar__link auth-btn" id="ssoBtn">...</button>
       <span class="navbar__badge">
         <span>🎬</span>
@@ -268,10 +279,15 @@ app.innerHTML = `
         <button class="btn ghost" id="redo">↪️ Rehacer</button>
         <button class="btn ghost beginner-only" id="rotateBeginner" title="Girar cámara">🔄 Girar</button>
         <button class="btn ghost beginner-only" id="mirrorBeginner" title="Espejo">🪞 Espejo</button>
+        <button class="btn ghost beginner-only sidebar__btn--toggle" id="gridBeginner" title="Mostrar/ocultar rejilla">📐 Rejilla</button>
       </div>
 
       <div class="stage__beginner-tools beginner-only">
-        <div class="stage__timer-dock" aria-label="Temporizadores de auto-captura">
+        <div class="stage__tools-col">
+          <button class="stage__auto-toggle" id="beginnerAutoToggle" type="button" title="Mostrar/ocultar temporizadores de auto-captura" aria-expanded="false">⏱</button>
+          <button class="stage__auto-toggle" id="beginnerTargetBtn" type="button" title="Establecer objetivo de fotogramas">🎯</button>
+        </div>
+        <div class="stage__timer-dock" id="beginnerTimerDock" aria-label="Temporizadores de auto-captura" hidden>
           <button class="stage__mini-btn" id="beginnerAutoCapture3" data-auto-interval="3" type="button" title="Captura automática cada 3 segundos">3s</button>
           <button class="stage__mini-btn" id="beginnerAutoCapture5" data-auto-interval="5" type="button" title="Captura automática cada 5 segundos">5s</button>
           <button class="stage__mini-btn" id="beginnerAutoCapture10" data-auto-interval="10" type="button" title="Captura automática cada 10 segundos">10s</button>
@@ -374,8 +390,42 @@ app.innerHTML = `
       </div>
 
       <div class="sidebar__section sidebar__section--advanced">
+        <h5 class="sidebar__title">Audio y vídeo</h5>
+        <p class="sidebar__helper" id="audioStatus">Pista de narración para tu animación</p>
+        <div class="audio-recorder-ui" id="audioRecorderUI">
+          <div class="audio-recorder__visualizer" id="audioLevel" aria-hidden="true">
+            <div class="audio-recorder__bar" id="audioLevelBar"></div>
+          </div>
+          <div class="audio-recorder__controls">
+            <button class="sidebar__btn sidebar__btn--accent" id="audioRecordBtn" title="Grabar narración">
+              <span class="sidebar__icon" id="audioRecordIcon">🎙️</span>
+              <span class="sidebar__label" id="audioRecordLabel">Grabar</span>
+            </button>
+            <button class="sidebar__btn" id="audioPlayBtn" title="Reproducir narración" hidden>
+              <span class="sidebar__icon">▶</span>
+              <span class="sidebar__label">Escuchar</span>
+            </button>
+            <button class="sidebar__btn sidebar__btn--danger" id="audioDeleteBtn" title="Eliminar narración" hidden>
+              <span class="sidebar__icon">🗑️</span>
+              <span class="sidebar__label">Borrar</span>
+            </button>
+          </div>
+          <span class="audio-recorder__duration" id="audioDuration" hidden></span>
+        </div>
+        <button class="sidebar__btn" id="videoImportBtn" title="Importar vídeo y extraer fotogramas">
+          <span class="sidebar__icon">🎞️</span>
+          <span class="sidebar__label">Importar vídeo</span>
+        </button>
+        <button class="sidebar__btn" id="videoRecordBtn" title="Grabar clip con la cámara y extraer fotogramas">
+          <span class="sidebar__icon" id="videoRecordIcon">⏺</span>
+          <span class="sidebar__label" id="videoRecordLabel">Grabar clip</span>
+        </button>
+        <input type="file" id="videoFileInput" accept="video/*" hidden />
+      </div>
+
+      <div class="sidebar__section sidebar__section--advanced">
         <h5 class="sidebar__title">Expansiones premium</h5>
-        <p class="sidebar__helper">Arquitectura preparada para sincronización, audio, chroma, MP4, HD+, galería y colaboración.</p>
+        <p class="sidebar__helper">Sincronización, chroma, MP4, HD+, galería y colaboración.</p>
         <div class="premium-grid" id="premiumFeatureGrid"></div>
       </div>
 
@@ -485,6 +535,12 @@ footer.innerHTML = `
         Código abierto en
         <a href="https://github.com/edumind-es/motion-stopmotion" target="_blank" rel="noopener noreferrer">GitHub</a>
       </p>
+      <p class="footer-text footer-license">
+        Software libre con licencia
+        <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener noreferrer">AGPL-3.0-or-later</a>
+        /
+        <a href="https://eupl.eu/1.2/es/" target="_blank" rel="noopener noreferrer">EUPL-1.2</a>
+      </p>
     </div>
 
     <div class="footer-links">
@@ -552,13 +608,27 @@ welcomeOverlay.innerHTML = `
 document.body.appendChild(welcomeOverlay)
 
 const ssoBtn = document.getElementById('ssoBtn') as HTMLButtonElement
+const tierBadgeEl = document.getElementById('tierBadge') as HTMLElement
 authManager.subscribe((isAuthenticated) => {
   if (isAuthenticated) {
+    const tier = authManager.getTier()
     ssoBtn.textContent = 'Mi cuenta'
     ssoBtn.onclick = () => { window.location.href = authManager.getShellUrl() }
+    if (tier === 'premium') {
+      tierBadgeEl.textContent = '✦ Premium'
+      tierBadgeEl.className = 'navbar__tier-badge navbar__tier-badge--premium'
+      tierBadgeEl.hidden = false
+    } else {
+      tierBadgeEl.textContent = 'Free'
+      tierBadgeEl.className = 'navbar__tier-badge navbar__tier-badge--free'
+      tierBadgeEl.hidden = false
+    }
+    // Refresca la grid de features premium al autenticarse
+    renderPremiumFeatureGrid()
   } else {
     ssoBtn.textContent = 'Iniciar sesión'
     ssoBtn.onclick = () => authManager.login()
+    tierBadgeEl.hidden = true
   }
 })
 
@@ -639,6 +709,8 @@ let exportersPromise: Promise<ExportersModule> | null = null
 let autoCaptureInterval: ReturnType<typeof setInterval> | null = null
 let autoCaptureCountdown: ReturnType<typeof setInterval> | null = null
 let autoCaptureActiveInterval: AutoCaptureIntervalSeconds | null = null
+let captureCountdownActive = false
+let frameTarget: number | null = parseInt(localStorage.getItem('motion_frame_target') ?? '', 10) || null
 
 function isLocalCameraHost(hostname: string) {
   return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || hostname.endsWith('.localhost')
@@ -675,7 +747,18 @@ function renderPremiumFeatureGrid() {
         return
       }
 
-      setExportStatus('Arquitectura preparada. Esta función llegará en una siguiente fase.', true)
+      // Features con flujo implementado
+      if (key === 'cloudSync') {
+        void projectManager.open('cloud')
+        return
+      }
+      if (key === 'gallery') {
+        void projectManager.open('gallery')
+        return
+      }
+
+      // Features en hoja de ruta (audio, chromaKey, mp4Export, hdExport, collaboration)
+      setExportStatus(`${button.querySelector('.premium-card__icon')?.textContent ?? ''} ${button.querySelector('.premium-card__title')?.textContent ?? ''}: en desarrollo para próximas versiones.`, true)
     }
   })
 }
@@ -897,6 +980,7 @@ function renderDerivedState(state: ProjectState) {
   document.getElementById('mirror')?.classList.toggle('active', state.settings.mirrorPreview)
   document.getElementById('rotateBeginner')?.classList.toggle('active', state.settings.invertCapture)
   document.getElementById('mirrorBeginner')?.classList.toggle('active', state.settings.mirrorPreview)
+  document.getElementById('gridBeginner')?.classList.toggle('active', state.settings.gridEnabled)
 
   updateProgressSemaphore(state.frames.length, state.settings)
   renderPedagogicalHint(state)
@@ -921,6 +1005,8 @@ function renderState(state: ProjectState) {
     isPlaying: state.isPlaying,
     uiMode: state.settings.uiMode
   })
+
+  if (state.settings.uiMode === 'beginner') renderFrameTarget()
 
   renderDerivedState(state)
   renderTransforms(state)
@@ -1186,9 +1272,20 @@ function startPlayback() {
   playbackRaf = requestAnimationFrame(runPlayback)
 }
 
-async function captureFrame() {
+async function captureFrame(opts: { withCountdown?: boolean } = {}) {
   if (!ensureFrameCapacity()) return
+  if (captureCountdownActive) return
   if (playing) stopPlayback()
+
+  const isBeginner = store.getState().settings.uiMode === 'beginner'
+
+  if (isBeginner && opts.withCountdown) {
+    captureCountdownActive = true
+    captureButtonEl.disabled = true
+    await showCountdown()
+    captureButtonEl.disabled = false
+    captureCountdownActive = false
+  }
 
   const canvas = document.createElement('canvas')
   const settings = store.getState().settings
@@ -1236,16 +1333,17 @@ async function captureFrame() {
   store.addFrame(frame)
   updateOverlayStatus()
   showCaptureFlash()
-  setExportStatus('Fotograma capturado')
   vibrateOnCapture()
 
-  // Show capture counter in beginner mode
-  if (store.getState().settings.uiMode === 'beginner') {
+  if (isBeginner) {
+    playShutterSound()
+    showCapturePreview(frame.objectUrl)
     showCaptureCounter(store.getState().frames.length)
   }
 
-  // Update progress semaphore
+  setExportStatus('Fotograma capturado')
   updateProgressSemaphore(store.getState().frames.length, store.getState().settings)
+  renderFrameTarget()
 }
 
 function maybeSearchRemote(term: string) {
@@ -1417,6 +1515,149 @@ function vibrateOnCapture() {
   }
 }
 
+// Cuenta atrás visual 3-2-1 antes de capturar en modo aula
+function showCountdown(): Promise<void> {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div')
+    overlay.className = 'capture-countdown-overlay'
+    document.body.appendChild(overlay)
+    let n = 3
+
+    function tick() {
+      if (n === 0) { overlay.remove(); return resolve() }
+      const el = document.createElement('span')
+      el.className = 'capture-countdown-overlay__n'
+      el.textContent = String(n)
+      overlay.replaceChildren(el)
+      n--
+      setTimeout(tick, 900)
+    }
+    tick()
+  })
+}
+
+// Click de obturador sintético via Web Audio API
+function playShutterSound() {
+  try {
+    const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(920, ctx.currentTime)
+    osc.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 0.09)
+    gain.gain.setValueAtTime(0.28, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.13)
+    osc.start(ctx.currentTime)
+    osc.stop(ctx.currentTime + 0.13)
+    void ctx.close()
+  } catch { /* Web Audio no disponible */ }
+}
+
+// Miniatura del fotograma capturado visible 1.3 s (esquina superior izquierda)
+function showCapturePreview(objectUrl: string) {
+  const div = document.createElement('div')
+  div.className = 'capture-preview-thumb'
+  div.style.backgroundImage = `url(${objectUrl})`
+  document.body.appendChild(div)
+  setTimeout(() => div.remove(), 1400)
+}
+
+// Modal de confirmación de borrado con botones táctiles grandes
+function showDeleteConfirm(): Promise<boolean> {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div')
+    overlay.className = 'delete-confirm-overlay'
+    overlay.innerHTML = `
+      <div class="delete-confirm">
+        <p class="delete-confirm__icon">🗑️</p>
+        <p class="delete-confirm__msg">¿Borrar esta foto?</p>
+        <div class="delete-confirm__actions">
+          <button class="delete-confirm__btn delete-confirm__btn--no">❌ No</button>
+          <button class="delete-confirm__btn delete-confirm__btn--yes">✅ Sí</button>
+        </div>
+      </div>
+    `
+    document.body.appendChild(overlay)
+    overlay.querySelector('.delete-confirm__btn--no')!.addEventListener('click', () => { overlay.remove(); resolve(false) })
+    overlay.querySelector('.delete-confirm__btn--yes')!.addEventListener('click', () => { overlay.remove(); resolve(true) })
+  })
+}
+
+// Guarda el objetivo de fotogramas y refresca el indicador
+function setFrameTarget(target: number | null) {
+  frameTarget = target
+  if (target !== null) {
+    localStorage.setItem('motion_frame_target', String(target))
+  } else {
+    localStorage.removeItem('motion_frame_target')
+  }
+  renderFrameTarget()
+}
+
+// Dibuja el indicador de progreso en la cabecera del filmstrip
+function renderFrameTarget() {
+  const summaryEl = document.querySelector<HTMLElement>('.timeline__filmstrip-summary')
+  if (!summaryEl) return
+
+  summaryEl.querySelector('.timeline__filmstrip-target')?.remove()
+  if (frameTarget === null) return
+
+  const frameCount = store.getState().frames.length
+  const done = frameCount >= frameTarget
+  const pill = document.createElement('span')
+  pill.className = 'timeline__filmstrip-target'
+  pill.dataset.done = String(done)
+  pill.title = 'Toca para cambiar el objetivo'
+  pill.innerHTML = `🎯 <strong>${frameCount}</strong> / ${frameTarget}`
+  pill.addEventListener('click', showFrameTargetPicker)
+  summaryEl.appendChild(pill)
+}
+
+// Modal selector de objetivo (número de fotos que deben conseguir)
+function showFrameTargetPicker() {
+  let val = frameTarget ?? 12
+
+  const overlay = document.createElement('div')
+  overlay.className = 'target-picker-overlay'
+  overlay.innerHTML = `
+    <div class="target-picker">
+      <p class="target-picker__title">🎯 Objetivo de fotos</p>
+      <p class="target-picker__subtitle">¿Cuántas fotos debe hacer el alumnado?</p>
+      <div class="target-picker__row">
+        <button class="target-picker__btn" id="tpMinus" type="button">−</button>
+        <span class="target-picker__value" id="tpValue">${val}</span>
+        <button class="target-picker__btn" id="tpPlus" type="button">+</button>
+      </div>
+      <div class="target-picker__actions">
+        <button class="target-picker__action target-picker__action--clear" type="button">Sin objetivo</button>
+        <button class="target-picker__action target-picker__action--ok" type="button">Establecer</button>
+      </div>
+    </div>
+  `
+  document.body.appendChild(overlay)
+
+  const valueEl = overlay.querySelector('#tpValue') as HTMLElement
+
+  overlay.querySelector('#tpMinus')!.addEventListener('click', () => {
+    val = Math.max(1, val - 1)
+    valueEl.textContent = String(val)
+  })
+  overlay.querySelector('#tpPlus')!.addEventListener('click', () => {
+    val = Math.min(120, val + 1)
+    valueEl.textContent = String(val)
+  })
+  overlay.querySelector('.target-picker__action--clear')!.addEventListener('click', () => {
+    setFrameTarget(null)
+    overlay.remove()
+  })
+  overlay.querySelector('.target-picker__action--ok')!.addEventListener('click', () => {
+    setFrameTarget(val)
+    overlay.remove()
+  })
+}
+
 let welcomeDismissed = localStorage.getItem('motion_welcome_dismissed') === 'true'
 
 function showKeyboardHint(key: string, action: string) {
@@ -1479,7 +1720,7 @@ cameraSelect.addEventListener('change', () => {
   void initCamera()
 })
 
-captureButtonEl.addEventListener('click', () => { void captureFrame() })
+captureButtonEl.addEventListener('click', () => { void captureFrame({ withCountdown: true }) })
 
 document.getElementById('addText')?.addEventListener('click', () => {
   const text = prompt('Introduce el texto a añadir al frame:')
@@ -1657,6 +1898,27 @@ document.getElementById('mirrorBeginner')?.addEventListener('click', () => {
   setExportStatus(next ? 'La siguiente captura se guardará espejada' : 'Espejo desactivado')
 })
 
+document.getElementById('gridBeginner')?.addEventListener('click', () => {
+  const next = !store.getState().settings.gridEnabled
+  store.updateSettings({ gridEnabled: next })
+  persistSettingsDefaults()
+  document.getElementById('gridBeginner')?.classList.toggle('active', next)
+  setExportStatus(next ? 'Rejilla activada' : 'Rejilla desactivada')
+})
+
+document.getElementById('beginnerTargetBtn')?.addEventListener('click', showFrameTargetPicker)
+
+// Toggle visibilidad de la dock de auto-captura en modo aula
+document.getElementById('beginnerAutoToggle')?.addEventListener('click', () => {
+  const dock = document.getElementById('beginnerTimerDock')
+  const btn = document.getElementById('beginnerAutoToggle')
+  if (!dock || !btn) return
+  const isHidden = dock.hidden
+  dock.hidden = !isHidden
+  btn.setAttribute('aria-expanded', String(isHidden))
+  btn.classList.toggle('is-active', isHidden)
+})
+
 // Auto-capture controls
 ;['autoCapture3', 'beginnerAutoCapture3'].forEach((id) => {
   document.getElementById(id)?.addEventListener('click', () => startAutoCapture(3))
@@ -1676,18 +1938,27 @@ document.getElementById('mirrorBeginner')?.addEventListener('click', () => {
 
 redoButtonEl.addEventListener('click', async () => {
   if (store.getState().settings.uiMode === 'beginner') {
-    const frames = store.getState().frames
-    if (frames.length > 0) {
-      store.removeFrame(frames[frames.length - 1].id)
-      setExportStatus('Último fotograma eliminado')
-    }
+    const state = store.getState()
+    if (state.frames.length === 0) return
+    const confirmed = await showDeleteConfirm()
+    if (!confirmed) return
+    const targetId = state.selectedFrameId ?? state.frames[state.frames.length - 1].id
+    store.removeFrame(targetId)
+    setExportStatus('Fotograma eliminado')
   } else {
     await store.redo()
   }
 })
 
 exportResolutionEl.addEventListener('change', () => {
-  store.updateSettings({ exportResolution: exportResolutionEl.value as ProjectSettings['exportResolution'] })
+  const resolution = exportResolutionEl.value as ProjectSettings['exportResolution']
+  // 1080p requiere tier premium (hdExport)
+  if (resolution === '1080p' && !checkAccess('hdExport', authManager.getTier())) {
+    setExportStatus(getPremiumUpsellMessage('hdExport'), true)
+    exportResolutionEl.value = store.getState().settings.exportResolution
+    return
+  }
+  store.updateSettings({ exportResolution: resolution })
   persistSettingsDefaults()
 })
 
@@ -1745,10 +2016,11 @@ document.getElementById('exportWebm')?.addEventListener('click', async () => {
       frames: state.frames,
       fps: state.settings.fps,
       resolution: state.settings.exportResolution,
+      audioBlob: audioBlob ?? undefined,
       onProgress: (current, total) => setExportStatus(`Generando vídeo ${Math.round((current / total) * 100)}%`, true)
     })
     downloadBlob(blob, `motion-${Date.now()}.webm`)
-    setExportStatus('WebM listo')
+    setExportStatus(audioBlob ? 'WebM listo (con narración)' : 'WebM listo')
   } catch (error) {
     console.error(error)
     setExportStatus('No se pudo exportar a WebM', true)
@@ -1910,7 +2182,7 @@ window.addEventListener('keydown', (event) => {
     case 'c':
     case 'f':
       event.preventDefault()
-      void captureFrame()
+      void captureFrame({ withCountdown: store.getState().settings.uiMode === 'beginner' })
       if (key === 'c' || key === 'f') {
         showKeyboardHint(key.toUpperCase(), 'Fotograma capturado')
       }
@@ -2044,6 +2316,406 @@ window.addEventListener('keydown', (event) => {
 
 store.subscribe(renderState)
 
+// ============================================================
+// Aviso LOPD — grabación de audio y vídeo
+// ============================================================
+
+const LOPD_CONSENT_KEY = 'motion_media_consent_v1'
+
+function showLopdNotice(onAccept: () => void) {
+  if (localStorage.getItem(LOPD_CONSENT_KEY) === 'accepted') { onAccept(); return }
+
+  const overlay = document.createElement('div')
+  overlay.className = 'lopd-overlay'
+  overlay.setAttribute('role', 'dialog')
+  overlay.setAttribute('aria-modal', 'true')
+  overlay.setAttribute('aria-labelledby', 'lopdTitle')
+  overlay.innerHTML = `
+    <div class="lopd-modal">
+      <h2 class="lopd-modal__title" id="lopdTitle">🔒 Privacidad — Grabación de medios</h2>
+      <div class="lopd-modal__body">
+        <p>Vas a usar la grabación de <strong>audio o vídeo</strong>. Antes de continuar, ten en cuenta:</p>
+        <ul>
+          <li><strong>Todo se procesa solo en tu dispositivo.</strong> Ninguna grabación se envía a servidores externos salvo que lo actives expresamente.</li>
+          <li>Las grabaciones de audio contienen <strong>datos biométricos de voz</strong> (categoría especial LOPD-RGPD). Úsalos responsablemente.</li>
+          <li>En contexto educativo, asegúrate de contar con el <strong>consentimiento</strong> de los participantes antes de grabar.</li>
+          <li>Puedes <strong>borrar cualquier grabación</strong> desde la interfaz en cualquier momento.</li>
+          <li>Al resetear el proyecto, las grabaciones asociadas también se eliminan.</li>
+        </ul>
+        <p class="lopd-modal__ref">Base legal: interés legítimo educativo (Art. 6.1.f RGPD) · Responsable: Luis Vilela Acuña / EDUmind</p>
+      </div>
+      <div class="lopd-modal__actions">
+        <button class="pm-btn pm-btn--ghost" id="lopdDecline">Cancelar</button>
+        <button class="pm-btn pm-btn--primary" id="lopdAccept">Entendido, continuar</button>
+      </div>
+    </div>
+  `
+  document.body.appendChild(overlay)
+  overlay.querySelector('#lopdDecline')!.addEventListener('click', () => overlay.remove())
+  overlay.querySelector('#lopdAccept')!.addEventListener('click', () => {
+    localStorage.setItem(LOPD_CONSENT_KEY, 'accepted')
+    overlay.remove()
+    onAccept()
+  })
+}
+
+// ============================================================
+// Audio — grabación, reproducción, almacenamiento
+// ============================================================
+
+const audioPlayback = new AudioPlayback()
+let audioRecorder: AudioRecorder | null = null
+let audioBlob: Blob | null = null
+let audioRecordingDurationMs = 0
+
+// Recarga la pista de audio cuando se cambia de proyecto
+async function reloadAudioTrack(projectId: string) {
+  audioPlayback.unload()
+  audioBlob = null
+  audioRecordingDurationMs = 0
+
+  const playBtn = document.getElementById('audioPlayBtn') as HTMLButtonElement | null
+  const deleteBtn = document.getElementById('audioDeleteBtn') as HTMLButtonElement | null
+  const durationEl = document.getElementById('audioDuration') as HTMLElement | null
+  const statusEl = document.getElementById('audioStatus') as HTMLElement | null
+  const recordLabel = document.getElementById('audioRecordLabel') as HTMLElement | null
+
+  const result = await loadAudioTrack(projectId)
+  if (result) {
+    audioBlob = result.blob
+    audioRecordingDurationMs = result.meta.durationMs
+    audioPlayback.load(audioBlob)
+    if (playBtn) playBtn.hidden = false
+    if (deleteBtn) deleteBtn.hidden = false
+    if (durationEl) { durationEl.hidden = false; durationEl.textContent = formatDuration(audioRecordingDurationMs) }
+    if (statusEl) statusEl.textContent = `Narración: ${formatDuration(result.meta.durationMs)}`
+    if (recordLabel) recordLabel.textContent = 'Re-grabar'
+  } else {
+    if (playBtn) playBtn.hidden = true
+    if (deleteBtn) deleteBtn.hidden = true
+    if (durationEl) durationEl.hidden = true
+    if (statusEl) statusEl.textContent = 'Pista de narración para tu animación'
+    if (recordLabel) recordLabel.textContent = 'Grabar'
+  }
+}
+
+function initAudioRecorder() {
+  const recordBtn = document.getElementById('audioRecordBtn') as HTMLButtonElement
+  const playBtn = document.getElementById('audioPlayBtn') as HTMLButtonElement
+  const deleteBtn = document.getElementById('audioDeleteBtn') as HTMLButtonElement
+  const levelBar = document.getElementById('audioLevelBar') as HTMLElement
+  const durationEl = document.getElementById('audioDuration') as HTMLElement
+  const statusEl = document.getElementById('audioStatus') as HTMLElement
+  const recordLabel = document.getElementById('audioRecordLabel') as HTMLElement
+  const recordIcon = document.getElementById('audioRecordIcon') as HTMLElement
+
+  function updateAudioUI(hasTrack: boolean) {
+    playBtn.hidden = !hasTrack
+    deleteBtn.hidden = !hasTrack
+    durationEl.hidden = !hasTrack
+    if (hasTrack) durationEl.textContent = formatDuration(audioRecordingDurationMs)
+  }
+
+  // Cargar pista existente al iniciar
+  loadAudioTrack(store.projectId).then((result) => {
+    if (result) {
+      audioBlob = result.blob
+      audioRecordingDurationMs = result.meta.durationMs
+      audioPlayback.load(audioBlob)
+      updateAudioUI(true)
+      statusEl.textContent = `Narración: ${formatDuration(result.meta.durationMs)}`
+    }
+  })
+
+  audioRecorder = new AudioRecorder({
+    onStateChange: (state) => {
+      if (state === 'recording') {
+        recordBtn.classList.add('sidebar__btn--recording')
+        recordIcon.textContent = '⏹'
+        recordLabel.textContent = 'Detener'
+        statusEl.textContent = 'Grabando...'
+      } else {
+        recordBtn.classList.remove('sidebar__btn--recording')
+        recordIcon.textContent = '🎙️'
+        recordLabel.textContent = audioBlob ? 'Re-grabar' : 'Grabar'
+      }
+    },
+    onLevelChange: (level) => {
+      levelBar.style.width = `${Math.round(level * 100)}%`
+    },
+    onDurationChange: (ms) => {
+      audioRecordingDurationMs = ms
+      durationEl.hidden = false
+      durationEl.textContent = `● ${formatDuration(ms)}`
+    },
+    onError: (msg) => {
+      setExportStatus(msg, true)
+      statusEl.textContent = 'Error de grabación'
+    }
+  })
+
+  recordBtn.addEventListener('click', () => {
+    showLopdNotice(() => {
+      if (audioRecorder?.currentState === 'recording') {
+        audioRecorder.stop().then((blob) => {
+          if (!blob) return
+          audioBlob = blob
+          audioPlayback.load(blob)
+          updateAudioUI(true)
+          statusEl.textContent = `Narración: ${formatDuration(audioRecordingDurationMs)}`
+          recordLabel.textContent = 'Re-grabar'
+          void saveAudioTrack(store.projectId, blob, audioRecordingDurationMs)
+          setExportStatus('Narración guardada')
+        })
+      } else {
+        void audioRecorder?.start()
+      }
+    })
+  })
+
+  playBtn.addEventListener('click', () => {
+    if (!audioBlob) return
+    audioPlayback.play(0)
+    setExportStatus('Reproduciendo narración...')
+  })
+
+  deleteBtn.addEventListener('click', () => {
+    if (!confirm('¿Eliminar la narración de este proyecto?')) return
+    audioPlayback.unload()
+    audioBlob = null
+    audioRecordingDurationMs = 0
+    void deleteAudioTrack(store.projectId)
+    updateAudioUI(false)
+    statusEl.textContent = 'Narración eliminada'
+    recordLabel.textContent = 'Grabar'
+    setExportStatus('Narración eliminada del proyecto')
+  })
+}
+
+// ============================================================
+// Vídeo — importar archivo + grabar clip con cámara
+// ============================================================
+
+let cameraVideoRecorder: CameraVideoRecorder | null = null
+
+function initVideoFeatures() {
+  const fileInput = document.getElementById('videoFileInput') as HTMLInputElement
+  const importBtn = document.getElementById('videoImportBtn') as HTMLButtonElement
+  const recordBtn = document.getElementById('videoRecordBtn') as HTMLButtonElement
+  const recordIcon = document.getElementById('videoRecordIcon') as HTMLElement
+  const recordLabel = document.getElementById('videoRecordLabel') as HTMLElement
+
+  // Importar vídeo desde archivo
+  importBtn.addEventListener('click', () => {
+    showLopdNotice(() => fileInput.click())
+  })
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0]
+    if (!file) return
+    fileInput.value = ''
+
+    if (!ensureFrameCapacity()) return
+
+    const fps = store.getState().settings.fps
+    setExportStatus(`Analizando vídeo (${file.name})...`, true)
+    importBtn.disabled = true
+
+    try {
+      const result = await importVideoFile(file, {
+        fps,
+        maxFrames: MAX_FRAME_COUNT - store.getState().frames.length,
+        onProgress: (c, t) => setExportStatus(`Extrayendo fotograma ${c}/${t}...`, true)
+      })
+      result.frames.forEach((f) => store.addFrame(f))
+      setExportStatus(`✅ ${result.frames.length} fotogramas importados del vídeo`)
+    } catch (e) {
+      setExportStatus(e instanceof Error ? e.message : 'Error al importar vídeo', true)
+    } finally {
+      importBtn.disabled = false
+    }
+  })
+
+  // Grabar clip con la cámara
+  recordBtn.addEventListener('click', () => {
+    showLopdNotice(() => {
+      if (cameraVideoRecorder?.isRecording()) {
+        // Detener grabación y extraer fotogramas
+        recordBtn.disabled = true
+        recordIcon.textContent = '⏺'
+        recordLabel.textContent = 'Grabar clip'
+        recordBtn.classList.remove('sidebar__btn--recording')
+
+        cameraVideoRecorder.stop().then(async (blob) => {
+          const fps = store.getState().settings.fps
+          setExportStatus('Extrayendo fotogramas del clip...', true)
+          try {
+            const result = await importVideoBlob(blob, {
+              fps,
+              maxFrames: MAX_FRAME_COUNT - store.getState().frames.length,
+              onProgress: (c, t) => setExportStatus(`Fotograma ${c}/${t}...`, true)
+            })
+            result.frames.forEach((f) => store.addFrame(f))
+            setExportStatus(`✅ ${result.frames.length} fotogramas del clip añadidos`)
+          } catch (e) {
+            setExportStatus(e instanceof Error ? e.message : 'Error al procesar clip', true)
+          } finally {
+            recordBtn.disabled = false
+            cameraVideoRecorder = null
+          }
+        })
+      } else {
+        // Iniciar grabación con el stream activo de la cámara
+        const stream = (document.getElementById('camera') as HTMLVideoElement)?.srcObject as MediaStream | null
+        if (!stream) { setExportStatus('Activa la cámara primero', true); return }
+
+        cameraVideoRecorder = new CameraVideoRecorder(stream)
+        cameraVideoRecorder.start()
+        recordIcon.textContent = '⏹'
+        recordLabel.textContent = 'Detener clip'
+        recordBtn.classList.add('sidebar__btn--recording')
+        setExportStatus('Grabando clip... Pulsa de nuevo para detener', true)
+      }
+    })
+  })
+}
+
+// Gestor de proyectos
+const projectManager = new ProjectManager({
+  onSwitch: async (projectId, projectName) => {
+    const currentState = store.getState()
+    if (currentState.frames.length > 0) {
+      await persistProject(currentState.frames, currentState.settings, store.projectId, store.projectName)
+    }
+    const loaded = await loadProject(projectId)
+    store.setProjectMeta(projectId, projectName)
+    if (loaded) {
+      store.setProject(loaded.frames, loaded.settings, true)
+    } else {
+      store.resetProject()
+    }
+    await reloadAudioTrack(projectId)
+    setExportStatus(`Proyecto "${projectName}" cargado`)
+    projectManager.setCurrentProject(projectId)
+  },
+  onNew: (projectId, projectName) => {
+    store.setProjectMeta(projectId, projectName)
+    store.resetProject()
+    void reloadAudioTrack(projectId)
+    setExportStatus(`Nuevo proyecto "${projectName}" creado`)
+    projectManager.setCurrentProject(projectId)
+  },
+  getCurrentProject: () => {
+    const state = store.getState()
+    return {
+      frames: state.frames,
+      settings: state.settings,
+      name: store.projectName,
+      audioBlob,
+      audioDurationMs: audioRecordingDurationMs
+    }
+  },
+  onCloudDownload: (frames, settings, name, cloudAudioBlob, cloudAudioDurationMs) => {
+    const newId = `proj_${Date.now()}_cloud`
+    store.setProjectMeta(newId, name)
+    store.setProject(frames, settings, true)
+    projectManager.setCurrentProject(newId)
+    void persistProject(frames, settings, newId, name)
+    // Restaurar audio descargado desde la nube
+    if (cloudAudioBlob) {
+      audioBlob = cloudAudioBlob
+      audioRecordingDurationMs = cloudAudioDurationMs ?? 0
+      audioPlayback.load(cloudAudioBlob)
+      void saveAudioTrack(newId, cloudAudioBlob, audioRecordingDurationMs)
+    }
+  },
+  onStatus: (msg, isError = false) => setExportStatus(msg, isError)
+})
+
+// Sincronizar contexto de auth con el gestor de proyectos
+authManager.subscribe((isAuthenticated) => {
+  projectManager.setAuthContext(
+    isAuthenticated,
+    authManager.getTier(),
+    () => authManager.getAccessToken()
+  )
+})
+
+document.getElementById('projectsBtn')?.addEventListener('click', () => {
+  void projectManager.open('local')
+})
+
+// Guardar en IDB antes de cerrar pestaña para no perder trabajo no persistido
+window.addEventListener('beforeunload', () => {
+  const state = store.getState()
+  if (state.dirty && state.frames.length > 0) {
+    void persistProject(state.frames, state.settings, store.projectId, store.projectName)
+  }
+})
+
+// ============================================================
+// Indicador de nivel con acelerómetro (progressive enhancement)
+// Solo se muestra si el dispositivo expone DeviceOrientationEvent
+// ============================================================
+
+function initLevelIndicator() {
+  if (typeof DeviceOrientationEvent === 'undefined') return
+
+  const indicator = document.createElement('div')
+  indicator.className = 'level-indicator'
+  indicator.setAttribute('aria-hidden', 'true')
+  indicator.title = 'Nivel del dispositivo'
+  indicator.innerHTML = `
+    <div class="level-indicator__ring"></div>
+    <div class="level-indicator__bubble" id="levelBubble"></div>
+  `
+  document.body.appendChild(indicator)
+
+  const MAX_TILT_DEG = 20
+  const RADIUS_PX = 14
+
+  function applyOrientation(gamma: number | null, beta: number | null) {
+    const bubble = document.getElementById('levelBubble')
+    if (!bubble) return
+
+    const gRaw = Math.max(-MAX_TILT_DEG, Math.min(MAX_TILT_DEG, gamma ?? 0))
+    const bRaw = Math.max(-MAX_TILT_DEG, Math.min(MAX_TILT_DEG, (beta ?? 0) - 90))
+    const xFrac = gRaw / MAX_TILT_DEG
+    const yFrac = bRaw / MAX_TILT_DEG
+
+    bubble.style.left = `calc(50% + ${xFrac * RADIUS_PX}px)`
+    bubble.style.top = `calc(50% + ${yFrac * RADIUS_PX}px)`
+
+    const isLevel = Math.abs(xFrac) < 0.15 && Math.abs(yFrac) < 0.15
+    indicator.classList.toggle('level-indicator--level', isLevel)
+  }
+
+  function startListening() {
+    window.addEventListener('deviceorientation', (e) => {
+      if (store.getState().settings.uiMode === 'beginner') {
+        applyOrientation(e.gamma, e.beta)
+      }
+    }, { passive: true })
+  }
+
+  // iOS 13+ requiere permiso explícito
+  if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+    indicator.style.cursor = 'pointer'
+    indicator.title = 'Toca para activar el nivel'
+    indicator.addEventListener('click', () => {
+      ;(DeviceOrientationEvent as any).requestPermission().then((result: string) => {
+        if (result === 'granted') {
+          indicator.style.cursor = 'default'
+          indicator.title = 'Nivel del dispositivo'
+          startListening()
+        }
+      }).catch(() => { /* permiso denegado, no hacer nada */ })
+    }, { once: true })
+  } else {
+    startListening()
+  }
+}
+
 initPWA(() => {})
 store.init().then(() => {
   renderState(store.getState())
@@ -2051,6 +2723,11 @@ store.init().then(() => {
   updateAutoCaptureControlsState()
   void loadPictos()
   updateOverlayStatus()
+  projectManager.setCurrentProject(store.projectId)
+  initAudioRecorder()
+  initVideoFeatures()
+
+  initLevelIndicator()
 
   const welcomeEl = document.getElementById('welcomeOverlay')
   if (welcomeDismissed) {

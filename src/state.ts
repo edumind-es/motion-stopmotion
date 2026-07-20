@@ -16,8 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { openDB } from 'idb'
-import { persistProject, loadProject } from './storage'
+import { persistProject, loadProject, DEFAULT_PROJECT_ID, dbPromise } from './storage'
 import { clampPlaybackPosition, getFrameIndexAtTime, getFrameStartMs, syncFrameDurations } from './timing'
 import type { FrameData, ProjectSettings, ProjectState } from './types'
 
@@ -62,6 +61,8 @@ export class Store {
   private redoStack: string[] = []
   private maxHistory = 20
   private saveTimeout: number | null = null
+  private _projectId: string = DEFAULT_PROJECT_ID
+  private _projectName: string = 'Sin título'
 
   constructor() {
     this.state = {
@@ -75,11 +76,21 @@ export class Store {
     }
   }
 
-  async init() {
-    const stored = await loadProject()
+  get projectId() { return this._projectId }
+  get projectName() { return this._projectName }
+
+  setProjectMeta(id: string, name: string) {
+    this._projectId = id
+    this._projectName = name
+  }
+
+  async init(projectId = DEFAULT_PROJECT_ID) {
+    this._projectId = projectId
+    const stored = await loadProject(projectId)
     if (stored) {
       this.state.frames = syncFrameDurations(stored.frames, { ...defaultSettings, ...stored.settings })
       this.state.settings = { ...defaultSettings, ...stored.settings }
+      this._projectName = stored.name ?? 'Sin título'
       this.syncSelection()
       this.notify()
     }
@@ -311,7 +322,7 @@ export class Store {
       }
 
       try {
-        const db = await openDB('motion_v1_db', 2)
+        const db = await dbPromise
         const record = await db.get('frames', frame.id)
         if (!record) {
           console.warn(`Frame ${frame.id} not found in memory or IDB. Skipping.`)
@@ -347,7 +358,7 @@ export class Store {
     if (this.saveTimeout) clearTimeout(this.saveTimeout)
 
     this.saveTimeout = window.setTimeout(async () => {
-      await persistProject(this.state.frames, this.state.settings)
+      await persistProject(this.state.frames, this.state.settings, this._projectId, this._projectName)
       this.state.dirty = false
       this.notifyWithoutSave()
     }, 1000)

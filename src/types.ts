@@ -110,3 +110,21 @@ export interface PictoCatalog {
   note?: string
   categories: PictoCategory[]
 }
+
+// Metadatos ligeros de un proyecto (sin fotogramas) para listar proyectos
+export interface ProjectMeta {
+  id: string
+  name: string
+  frameCount: number
+  lastSaved: number
+}
+
+// Pista de audio asociada a un proyecto (voz en off, narración, efectos)
+// LOPD: almacenada solo en IDB del dispositivo del usuario
+export interface AudioTrackMeta {
+  projectId: string
+  durationMs: number
+  mimeType: string
+  createdAt: number
+  sizeBytes: number
+}

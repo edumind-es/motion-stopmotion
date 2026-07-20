@@ -2,15 +2,27 @@
   "name": "motion_v1",
   "private": true,
   "version": "0.0.0",
+  "author": "Luis Vilela Acuña <contacto@edumind.es>",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "ripg:local": "bash scripts/ripg-go-nogo.sh --build",
+    "ripg:live": "bash scripts/ripg-go-nogo.sh --live",
+    "ripg:go-nogo": "bash scripts/ripg-go-nogo.sh --build --live",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "coverage": "vitest run --coverage"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^2.1.9",
+    "@vitest/ui": "^2.1.9",
+    "happy-dom": "^14.12.3",
     "typescript": "~5.9.3",
-    "vite": "^7.2.4"
+    "vite": "^7.2.4",
+    "vitest": "^2.1.9"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",
@@ -24,6 +36,5 @@
     "pdf-lib": "^1.17.1",
     "vite-plugin-pwa": "^1.1.0",
     "workbox-window": "^7.4.0"
-  },
-  "license": "(AGPL-3.0-or-later OR EUPL-1.2)"
+  }
 }
