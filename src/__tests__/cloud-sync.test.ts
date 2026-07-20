@@ -22,7 +22,7 @@ describe('serializeProjectForCloud', () => {
       onload: null as any,
       onerror: null as any
     }
-    vi.stubGlobal('FileReader', vi.fn(() => mockFileReader))
+    vi.stubGlobal('FileReader', vi.fn(function () { return mockFileReader }))
   })
 
   afterEach(() => {

@@ -8,18 +8,21 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "ripg:local": "bash scripts/ripg-go-nogo.sh --build",
+    "ripg:live": "bash scripts/ripg-go-nogo.sh --live",
+    "ripg:go-nogo": "bash scripts/ripg-go-nogo.sh --build --live",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^2.1.9",
-    "@vitest/ui": "^2.1.9",
-    "happy-dom": "^14.12.3",
+    "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/ui": "^4.1.10",
+    "happy-dom": "^20.11.0",
     "typescript": "~5.9.3",
     "vite": "^7.2.4",
-    "vitest": "^2.1.9"
+    "vitest": "^4.1.10"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",
