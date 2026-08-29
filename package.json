@@ -8,9 +8,6 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "ripg:local": "bash scripts/ripg-go-nogo.sh --build",
-    "ripg:live": "bash scripts/ripg-go-nogo.sh --live",
-    "ripg:go-nogo": "bash scripts/ripg-go-nogo.sh --build --live",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
@@ -36,5 +33,6 @@
     "pdf-lib": "^1.17.1",
     "vite-plugin-pwa": "^1.1.0",
     "workbox-window": "^7.4.0"
-  }
+  },
+  "license": "(AGPL-3.0-or-later OR EUPL-1.2)"
 }

@@ -1,0 +1,70 @@
+# Corre la misma tanda que se corre en local: no hay dos verdades sobre si el
+# proyecto está bien.
+#
+# NO despliega. El despliegue es siempre una decisión manual.
+name: Pruebas
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  web:
+    name: Aplicación web (tipos, pruebas, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Pruebas
+        run: npm test
+      - name: Compilar (incluye chequeo de tipos)
+        run: npm run build
+
+  api:
+    name: Servidor API
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Comprobar que el servidor arranca y responde
+        run: |
+          node --check auth.js && node --check db.js && node --check index.js
+          DB_PATH=./ci.db PORT=3299 node index.js &
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:3299/health && break || sleep 1
+          done
+          curl -sf http://127.0.0.1:3299/health
+
+  seguridad:
+    name: Seguridad (lo que viaja al navegador)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Auditoría completa (informativa)
+        run: npm audit || true
+      - name: Puerta — vulnerabilidades altas en dependencias de runtime
+        run: npm audit --omit=dev --audit-level=high
