@@ -23,3 +23,31 @@ updates:
         # Agrupadas también, pero aparte: son las que rompen y se revisan
         # con calma. Si una necesita atención propia, se saca de aquí.
         update-types: ["major"]
+
+  # El servidor de la API tiene su propio package.json desde que se publicó
+  # junto al frontend (AGPL art. 13).
+  - package-ecosystem: "npm"
+    directory: "/server"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      menores-y-parches:
+        update-types: ["minor", "patch"]
+      mayores:
+        update-types: ["major"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "chore(ci)"
+    groups:
+      menores-y-parches:
+        update-types: ["minor", "patch"]
+      mayores:
+        update-types: ["major"]
