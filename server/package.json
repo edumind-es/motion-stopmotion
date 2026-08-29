@@ -9,11 +9,11 @@
     "dev": "node --watch index.js"
   },
   "dependencies": {
-    "better-sqlite3": "^11.0.0",
+    "better-sqlite3": "^13.0.3",
     "cors": "^2.8.5",
     "dotenv": "^17.4.2",
-    "express": "^4.21.0",
-    "jose": "^5.9.0"
+    "express": "^5.2.1",
+    "jose": "^6.2.10"
   },
   "engines": {
     "node": ">=20"
