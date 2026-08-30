@@ -2,7 +2,7 @@
   "name": "motion_v1",
   "private": true,
   "version": "0.0.0",
-  "author": "Luis Vilela Acuña <contacto@edumind.es>",
+  "author": "Luis Vilela Acu\u00f1a <contacto@edumind.es>",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -17,21 +17,21 @@
     "@vitest/coverage-v8": "^4.1.10",
     "@vitest/ui": "^4.1.10",
     "happy-dom": "^20.11.0",
-    "typescript": "~5.9.3",
-    "vite": "^7.2.4",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2",
     "vitest": "^4.1.10"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",
     "@capacitor/camera": "^8.0.1",
-    "@capacitor/cli": "^7.5.0",
+    "@capacitor/cli": "^8.5.0",
     "@capacitor/core": "^8.1.0",
     "@capacitor/ios": "^8.1.0",
     "idb": "^8.0.3",
     "jszip": "^3.10.1",
     "oidc-client-ts": "^3.5.0",
     "pdf-lib": "^1.17.1",
-    "vite-plugin-pwa": "^1.1.0",
+    "vite-plugin-pwa": "^1.3.0",
     "workbox-window": "^7.4.0"
   },
   "license": "(AGPL-3.0-or-later OR EUPL-1.2)"
