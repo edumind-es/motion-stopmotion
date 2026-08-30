@@ -1913,7 +1913,7 @@ document.getElementById('beginnerAutoToggle')?.addEventListener('click', () => {
   const dock = document.getElementById('beginnerTimerDock')
   const btn = document.getElementById('beginnerAutoToggle')
   if (!dock || !btn) return
-  const isHidden = dock.hidden
+  const isHidden = Boolean(dock.hidden)
   dock.hidden = !isHidden
   btn.setAttribute('aria-expanded', String(isHidden))
   btn.classList.toggle('is-active', isHidden)
