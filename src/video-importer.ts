@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024-2026 EDUmind - Los Mundos Edufis
+ * Copyright (C) 2024-2026 Luis Vilela Acuña <contacto@edumind.es>
  * Author: Luis Vilela Acuña
  *
  * AVISO LOPD / RGPD:
