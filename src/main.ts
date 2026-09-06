@@ -528,8 +528,8 @@ footer.innerHTML = `
   <div class="footer-content">
     <div class="footer-brand">
       <a href="https://losmundosedufis.com" target="_blank" rel="noopener noreferrer" class="footer-logo-link">
-        <img src="./icons/logo_LME_def.webp" alt="Los Mundos Edufis" class="footer-logo" />
-        <span>Los Mundos Edufis</span>
+        <img src="./icons/logo_LME_def.webp" alt="EDUmind" class="footer-logo" />
+        <span>Luis Vilela Acuña</span>
       </a>
       <p class="footer-text">
         Código abierto en
