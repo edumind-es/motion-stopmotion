@@ -16,9 +16,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-/* Note: Geist fonts removed due to corrupted files. Fallback to Inter and system fonts */
+/* Tipografía Inter servida en local (public/fonts/inter, licencia OFL 1.1).
+   Nada se pide a Google Fonts: ninguna petición sale del dispositivo al abrir la app. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/inter/InterVariable.woff2') format('woff2');
+}
 
 /* ============================================
    EDUmind Design System - Motion App
@@ -1085,7 +1091,7 @@ kbd {
   background: linear-gradient(180deg, rgba(60, 125, 255, 0.25) 0%, rgba(25, 40, 66, 0.8) 100%);
   border: 1px solid rgba(60, 125, 255, 0.4);
   border-radius: 6px;
-  font-family: 'Geist Mono', monospace;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
   font-size: 11px;
   font-weight: 700;
   color: var(--ink);
