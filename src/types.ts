@@ -40,15 +40,6 @@ export interface MotionGuideState {
   p3: Point2D
 }
 
-export type PremiumFeatureKey =
-  | 'cloudSync'
-  | 'audioTrack'
-  | 'chromaKey'
-  | 'mp4Export'
-  | 'hdExport'
-  | 'gallery'
-  | 'collaboration'
-
 export interface FrameMeta {
   id: string
   source: FrameSource

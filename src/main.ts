@@ -41,8 +41,7 @@ import {
   getSelectedFrame,
   getTotalDurationMs
 } from './timing'
-import { PREMIUM_FEATURES, checkAccess, getPremiumUpsellMessage } from './premium-gates'
-import type { AutoCaptureIntervalSeconds, FrameData, PictoItem, PremiumFeatureKey, ProjectState, ProjectSettings } from './types'
+import type { AutoCaptureIntervalSeconds, FrameData, PictoItem, ProjectState, ProjectSettings } from './types'
 
 type ExportersModule = typeof import('./exporters')
 
@@ -423,12 +422,6 @@ app.innerHTML = `
         <input type="file" id="videoFileInput" accept="video/*" hidden />
       </div>
 
-      <div class="sidebar__section sidebar__section--advanced">
-        <h5 class="sidebar__title">Expansiones premium</h5>
-        <p class="sidebar__helper">Sincronización, chroma, MP4, HD+, galería y colaboración.</p>
-        <div class="premium-grid" id="premiumFeatureGrid"></div>
-      </div>
-
       <div class="sidebar__section">
         <h5 class="sidebar__title">Pictogramas</h5>
         <button class="sidebar__btn sidebar__btn--accent" id="openPictoModal" title="Abrir selector de pictogramas">
@@ -601,7 +594,7 @@ welcomeOverlay.innerHTML = `
       <button class="welcome-overlay__mode-btn welcome-overlay__mode-btn--pro" id="welcomeModePro">
         <span class="welcome-overlay__mode-icon">🧭</span>
         <span class="welcome-overlay__mode-title">Modo Pro</span>
-        <span class="welcome-overlay__mode-desc">Timeline completa, exportaciones, ajustes finos y laboratorio de funciones avanzadas.</span>
+        <span class="welcome-overlay__mode-desc">Timeline completa, exportaciones y ajustes finos.</span>
       </button>
     </div>
   </div>
@@ -624,8 +617,6 @@ authManager.subscribe((isAuthenticated) => {
       tierBadgeEl.className = 'navbar__tier-badge navbar__tier-badge--free'
       tierBadgeEl.hidden = false
     }
-    // Refresca la grid de features premium al autenticarse
-    renderPremiumFeatureGrid()
   } else {
     ssoBtn.textContent = 'Iniciar sesión'
     ssoBtn.onclick = () => authManager.login()
@@ -663,7 +654,6 @@ const loopToggleEl = document.getElementById('loopToggle') as HTMLButtonElement
 const uiModeToggleEl = document.getElementById('uiModeToggle') as HTMLButtonElement
 const uiModeStatusEl = document.getElementById('uiModeStatus') as HTMLElement
 const templateStatusEl = document.getElementById('templateStatus') as HTMLElement
-const premiumFeatureGridEl = document.getElementById('premiumFeatureGrid') as HTMLElement
 const playButtonEl = document.getElementById('play') as HTMLButtonElement
 const captureButtonEl = document.getElementById('capture') as HTMLButtonElement
 const fpsInputEl = document.getElementById('fps') as HTMLInputElement
@@ -715,53 +705,6 @@ let frameTarget: number | null = parseInt(localStorage.getItem('motion_frame_tar
 
 function isLocalCameraHost(hostname: string) {
   return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || hostname.endsWith('.localhost')
-}
-
-function renderPremiumFeatureGrid() {
-  if (!premiumFeatureGridEl) return
-  const tier = authManager.getTier()
-
-  premiumFeatureGridEl.innerHTML = PREMIUM_FEATURES.map((feature) => {
-    const accessible = checkAccess(feature.key, tier)
-    return `
-      <button
-        class="premium-card${accessible ? ' premium-card--available' : ''}"
-        type="button"
-        data-premium-feature="${feature.key}"
-        aria-label="${feature.name}"
-      >
-        <span class="premium-card__icon">${feature.icon}</span>
-        <span class="premium-card__title">${feature.name}</span>
-        <span class="premium-card__desc">${feature.description}</span>
-        <span class="premium-card__meta">${accessible ? 'Preparado' : 'Premium'}</span>
-      </button>
-    `
-  }).join('')
-
-  premiumFeatureGridEl.querySelectorAll<HTMLElement>('[data-premium-feature]').forEach((button) => {
-    button.onclick = () => {
-      const key = button.dataset.premiumFeature as PremiumFeatureKey | undefined
-      if (!key) return
-
-      if (!checkAccess(key, tier)) {
-        setExportStatus(getPremiumUpsellMessage(key), true)
-        return
-      }
-
-      // Features con flujo implementado
-      if (key === 'cloudSync') {
-        void projectManager.open('cloud')
-        return
-      }
-      if (key === 'gallery') {
-        void projectManager.open('gallery')
-        return
-      }
-
-      // Features en hoja de ruta (audio, chromaKey, mp4Export, hdExport, collaboration)
-      setExportStatus(`${button.querySelector('.premium-card__icon')?.textContent ?? ''} ${button.querySelector('.premium-card__title')?.textContent ?? ''}: en desarrollo para próximas versiones.`, true)
-    }
-  })
 }
 
 const timeline = new TimelineManager(timelineEl, {
@@ -1953,12 +1896,6 @@ redoButtonEl.addEventListener('click', async () => {
 
 exportResolutionEl.addEventListener('change', () => {
   const resolution = exportResolutionEl.value as ProjectSettings['exportResolution']
-  // 1080p requiere tier premium (hdExport)
-  if (resolution === '1080p' && !checkAccess('hdExport', authManager.getTier())) {
-    setExportStatus(getPremiumUpsellMessage('hdExport'), true)
-    exportResolutionEl.value = store.getState().settings.exportResolution
-    return
-  }
   store.updateSettings({ exportResolution: resolution })
   persistSettingsDefaults()
 })
@@ -2720,7 +2657,6 @@ function initLevelIndicator() {
 initPWA(() => {})
 store.init().then(() => {
   renderState(store.getState())
-  renderPremiumFeatureGrid()
   updateAutoCaptureControlsState()
   void loadPictos()
   updateOverlayStatus()
