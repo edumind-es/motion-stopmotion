@@ -45,7 +45,7 @@ import type { AutoCaptureIntervalSeconds, FrameData, PictoItem, ProjectState, Pr
 
 type ExportersModule = typeof import('./exporters')
 
-const APP_VERSION = '3.0.0'
+const APP_VERSION = '3.0.1'
 const MAX_FRAME_COUNT = 1500
 const EXPORT_STATUS_CLEAR_MS = 2600
 

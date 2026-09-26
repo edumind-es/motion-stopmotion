@@ -1,7 +1,7 @@
 {
   "name": "motion_v1",
   "private": true,
-  "version": "0.0.0",
+  "version": "3.0.1",
   "author": "Luis Vilela Acu\u00f1a <contacto@edumind.es>",
   "type": "module",
   "scripts": {
