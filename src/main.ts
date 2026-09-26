@@ -446,7 +446,7 @@ app.innerHTML = `
       <li><strong>Tempo:</strong> a 4 FPS, 4 fotos hacen 1 segundo. A 8 FPS, necesitarás 8.</li>
       <li><strong>Edición:</strong> pulsa en cualquier frame para seleccionarlo, reproducir desde ahí o arrastrarlo.</li>
       <li><strong>Exporta:</strong> WebM para vídeo, ZIP para secuencia, JSON/NDJSON para guardar el proyecto.</li>
-      <li><strong>Privacidad:</strong> todo queda en el dispositivo salvo que actives búsqueda remota de pictogramas.</li>
+      <li><strong>Privacidad:</strong> fotogramas, proyectos y ajustes se guardan solo en este navegador. La app no lleva analítica y no carga nada de terceros al abrirse. Solo se comunica con otro servidor si tú lo pides: buscar pictogramas en ARASAAC (casilla en el selector), iniciar sesión (Authentik de EDUmind) o guardar un proyecto en la nube y en la galería (requiere sesión).</li>
     </ul>
     <p class="guide__link"><a href="./guia-alumnado.html" target="_blank" rel="noopener noreferrer">📖 Guía impresa para el alumnado (1.º y 3.º de Primaria)</a></p>
 
@@ -487,7 +487,7 @@ app.innerHTML = `
         <details class="faq-item">
           <summary>¿Se suben mis datos?</summary>
           <div class="faq-content">
-            <p>No. La app sigue siendo offline-first y guarda proyectos localmente. Solo ARASAAC remoto usa red cuando lo activas tú.</p>
+            <p>Por defecto, no: la app funciona sin conexión y guarda los proyectos en el propio navegador, sin analítica ni tipografías remotas. Usa la red solo cuando tú lo pides: la búsqueda en ARASAAC online (envía el término buscado), el inicio de sesión (Authentik) y el guardado en la nube o la galería, que sube el proyecto completo a la API de EDUmind. Detalle en PRIVACIDAD.md del repositorio.</p>
           </div>
         </details>
       </div>
