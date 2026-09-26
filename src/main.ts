@@ -41,12 +41,11 @@ import {
   getSelectedFrame,
   getTotalDurationMs
 } from './timing'
-import { PREMIUM_FEATURES, checkAccess, getPremiumUpsellMessage } from './premium-gates'
-import type { AutoCaptureIntervalSeconds, FrameData, PictoItem, PremiumFeatureKey, ProjectState, ProjectSettings } from './types'
+import type { AutoCaptureIntervalSeconds, FrameData, PictoItem, ProjectState, ProjectSettings } from './types'
 
 type ExportersModule = typeof import('./exporters')
 
-const APP_VERSION = '3.0.0'
+const APP_VERSION = '3.0.1'
 const MAX_FRAME_COUNT = 1500
 const EXPORT_STATUS_CLEAR_MS = 2600
 
@@ -112,6 +111,7 @@ app.innerHTML = `
 
       <div class="sidebar__section">
         <h5 class="sidebar__title">Cámara</h5>
+        <label for="cameraSelect" class="sidebar__field-label">Cámara activa</label>
         <select id="cameraSelect" class="sidebar__select" title="Seleccionar cámara"></select>
         <button class="sidebar__btn" id="rotate" title="Girar cámara">
           <span class="sidebar__icon">🔄</span>
@@ -126,12 +126,12 @@ app.innerHTML = `
       <div class="sidebar__section">
         <h5 class="sidebar__title">Ajustes</h5>
         <div class="sidebar__control">
-          <label class="sidebar__label-inline sidebar__label-inline--stack">
-            <span class="sidebar__icon">🎬</span>
-            <span>FPS</span>
+          <div class="sidebar__label-inline sidebar__label-inline--stack">
+            <span class="sidebar__icon" aria-hidden="true">🎬</span>
+            <label for="fps">Fotogramas por segundo (FPS)</label>
             <input type="range" id="fps" min="1" max="15" step="1" class="sidebar__slider" />
             <span class="sidebar__value" id="fpsValue">6 FPS</span>
-          </label>
+          </div>
         </div>
         <button class="sidebar__btn sidebar__btn--toggle" id="loopToggle" title="Reproducción en bucle">
           <span class="sidebar__icon">🔁</span>
@@ -142,6 +142,7 @@ app.innerHTML = `
           <span class="sidebar__label">Onion</span>
         </button>
         <div class="sidebar__control sidebar__control--sub">
+          <label for="onionOpacity" class="sidebar__field-label">Opacidad del onion skin</label>
           <input type="range" id="onionOpacity" min="0" max="1" step="0.05" class="sidebar__slider sidebar__slider--small" title="Opacidad del onion skin" />
         </div>
         <button class="sidebar__btn sidebar__btn--toggle" id="gridToggle" title="Mostrar rejilla de composición">
@@ -149,11 +150,11 @@ app.innerHTML = `
           <span class="sidebar__label">Rejilla</span>
         </button>
         <div class="sidebar__control">
-          <label class="sidebar__label-inline sidebar__label-inline--stack">
-            <span class="sidebar__icon">🔍</span>
-            <span>Zoom</span>
+          <div class="sidebar__label-inline sidebar__label-inline--stack">
+            <span class="sidebar__icon" aria-hidden="true">🔍</span>
+            <label for="zoomSlider">Zoom de la cámara</label>
             <input type="range" id="zoomSlider" min="1" max="3" step="0.1" class="sidebar__slider" />
-          </label>
+          </div>
         </div>
       </div>
 
@@ -423,12 +424,6 @@ app.innerHTML = `
         <input type="file" id="videoFileInput" accept="video/*" hidden />
       </div>
 
-      <div class="sidebar__section sidebar__section--advanced">
-        <h5 class="sidebar__title">Expansiones premium</h5>
-        <p class="sidebar__helper">Sincronización, chroma, MP4, HD+, galería y colaboración.</p>
-        <div class="premium-grid" id="premiumFeatureGrid"></div>
-      </div>
-
       <div class="sidebar__section">
         <h5 class="sidebar__title">Pictogramas</h5>
         <button class="sidebar__btn sidebar__btn--accent" id="openPictoModal" title="Abrir selector de pictogramas">
@@ -451,8 +446,9 @@ app.innerHTML = `
       <li><strong>Tempo:</strong> a 4 FPS, 4 fotos hacen 1 segundo. A 8 FPS, necesitarás 8.</li>
       <li><strong>Edición:</strong> pulsa en cualquier frame para seleccionarlo, reproducir desde ahí o arrastrarlo.</li>
       <li><strong>Exporta:</strong> WebM para vídeo, ZIP para secuencia, JSON/NDJSON para guardar el proyecto.</li>
-      <li><strong>Privacidad:</strong> todo queda en el dispositivo salvo que actives búsqueda remota de pictogramas.</li>
+      <li><strong>Privacidad:</strong> fotogramas, proyectos y ajustes se guardan solo en este navegador. La app no lleva analítica y no carga nada de terceros al abrirse. Solo se comunica con otro servidor si tú lo pides: buscar pictogramas en ARASAAC (casilla en el selector), iniciar sesión (Authentik de EDUmind) o guardar un proyecto en la nube y en la galería (requiere sesión).</li>
     </ul>
+    <p class="guide__link"><a href="./guia-alumnado.html" target="_blank" rel="noopener noreferrer">📖 Guía impresa para el alumnado (1.º y 3.º de Primaria)</a></p>
 
     <details open>
       <summary>⌨️ Atajos de teclado</summary>
@@ -491,7 +487,7 @@ app.innerHTML = `
         <details class="faq-item">
           <summary>¿Se suben mis datos?</summary>
           <div class="faq-content">
-            <p>No. La app sigue siendo offline-first y guarda proyectos localmente. Solo ARASAAC remoto usa red cuando lo activas tú.</p>
+            <p>Por defecto, no: la app funciona sin conexión y guarda los proyectos en el propio navegador, sin analítica ni tipografías remotas. Usa la red solo cuando tú lo pides: la búsqueda en ARASAAC online (envía el término buscado), el inicio de sesión (Authentik) y el guardado en la nube o la galería, que sube el proyecto completo a la API de EDUmind. Detalle en PRIVACIDAD.md del repositorio.</p>
           </div>
         </details>
       </div>
@@ -540,6 +536,11 @@ footer.innerHTML = `
         <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener noreferrer">AGPL-3.0-or-later</a>
         /
         <a href="https://eupl.eu/1.2/es/" target="_blank" rel="noopener noreferrer">EUPL-1.2</a>
+      </p>
+      <p class="footer-text footer-credits">
+        Pictogramas: autor Sergio Palao, origen <a href="http://www.arasaac.org" target="_blank" rel="noopener noreferrer">ARASAAC</a>,
+        licencia CC BY-NC-SA, propiedad Gobierno de Aragón (España) · Tipografía Inter (OFL 1.1) ·
+        <a href="https://github.com/edumind-es/motion-stopmotion/blob/main/CREDITS.md" target="_blank" rel="noopener noreferrer">Todos los créditos</a>
       </p>
     </div>
 
@@ -600,7 +601,7 @@ welcomeOverlay.innerHTML = `
       <button class="welcome-overlay__mode-btn welcome-overlay__mode-btn--pro" id="welcomeModePro">
         <span class="welcome-overlay__mode-icon">🧭</span>
         <span class="welcome-overlay__mode-title">Modo Pro</span>
-        <span class="welcome-overlay__mode-desc">Timeline completa, exportaciones, ajustes finos y laboratorio de funciones avanzadas.</span>
+        <span class="welcome-overlay__mode-desc">Timeline completa, exportaciones y ajustes finos.</span>
       </button>
     </div>
   </div>
@@ -623,8 +624,6 @@ authManager.subscribe((isAuthenticated) => {
       tierBadgeEl.className = 'navbar__tier-badge navbar__tier-badge--free'
       tierBadgeEl.hidden = false
     }
-    // Refresca la grid de features premium al autenticarse
-    renderPremiumFeatureGrid()
   } else {
     ssoBtn.textContent = 'Iniciar sesión'
     ssoBtn.onclick = () => authManager.login()
@@ -662,7 +661,6 @@ const loopToggleEl = document.getElementById('loopToggle') as HTMLButtonElement
 const uiModeToggleEl = document.getElementById('uiModeToggle') as HTMLButtonElement
 const uiModeStatusEl = document.getElementById('uiModeStatus') as HTMLElement
 const templateStatusEl = document.getElementById('templateStatus') as HTMLElement
-const premiumFeatureGridEl = document.getElementById('premiumFeatureGrid') as HTMLElement
 const playButtonEl = document.getElementById('play') as HTMLButtonElement
 const captureButtonEl = document.getElementById('capture') as HTMLButtonElement
 const fpsInputEl = document.getElementById('fps') as HTMLInputElement
@@ -714,53 +712,6 @@ let frameTarget: number | null = parseInt(localStorage.getItem('motion_frame_tar
 
 function isLocalCameraHost(hostname: string) {
   return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || hostname.endsWith('.localhost')
-}
-
-function renderPremiumFeatureGrid() {
-  if (!premiumFeatureGridEl) return
-  const tier = authManager.getTier()
-
-  premiumFeatureGridEl.innerHTML = PREMIUM_FEATURES.map((feature) => {
-    const accessible = checkAccess(feature.key, tier)
-    return `
-      <button
-        class="premium-card${accessible ? ' premium-card--available' : ''}"
-        type="button"
-        data-premium-feature="${feature.key}"
-        aria-label="${feature.name}"
-      >
-        <span class="premium-card__icon">${feature.icon}</span>
-        <span class="premium-card__title">${feature.name}</span>
-        <span class="premium-card__desc">${feature.description}</span>
-        <span class="premium-card__meta">${accessible ? 'Preparado' : 'Premium'}</span>
-      </button>
-    `
-  }).join('')
-
-  premiumFeatureGridEl.querySelectorAll<HTMLElement>('[data-premium-feature]').forEach((button) => {
-    button.onclick = () => {
-      const key = button.dataset.premiumFeature as PremiumFeatureKey | undefined
-      if (!key) return
-
-      if (!checkAccess(key, tier)) {
-        setExportStatus(getPremiumUpsellMessage(key), true)
-        return
-      }
-
-      // Features con flujo implementado
-      if (key === 'cloudSync') {
-        void projectManager.open('cloud')
-        return
-      }
-      if (key === 'gallery') {
-        void projectManager.open('gallery')
-        return
-      }
-
-      // Features en hoja de ruta (audio, chromaKey, mp4Export, hdExport, collaboration)
-      setExportStatus(`${button.querySelector('.premium-card__icon')?.textContent ?? ''} ${button.querySelector('.premium-card__title')?.textContent ?? ''}: en desarrollo para próximas versiones.`, true)
-    }
-  })
 }
 
 const timeline = new TimelineManager(timelineEl, {
@@ -1952,12 +1903,6 @@ redoButtonEl.addEventListener('click', async () => {
 
 exportResolutionEl.addEventListener('change', () => {
   const resolution = exportResolutionEl.value as ProjectSettings['exportResolution']
-  // 1080p requiere tier premium (hdExport)
-  if (resolution === '1080p' && !checkAccess('hdExport', authManager.getTier())) {
-    setExportStatus(getPremiumUpsellMessage('hdExport'), true)
-    exportResolutionEl.value = store.getState().settings.exportResolution
-    return
-  }
   store.updateSettings({ exportResolution: resolution })
   persistSettingsDefaults()
 })
@@ -2719,7 +2664,6 @@ function initLevelIndicator() {
 initPWA(() => {})
 store.init().then(() => {
   renderState(store.getState())
-  renderPremiumFeatureGrid()
   updateAutoCaptureControlsState()
   void loadPictos()
   updateOverlayStatus()

@@ -16,9 +16,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-/* Note: Geist fonts removed due to corrupted files. Fallback to Inter and system fonts */
+/* Tipografía Inter servida en local (public/fonts/inter, licencia OFL 1.1).
+   Nada se pide a Google Fonts: ninguna petición sale del dispositivo al abrir la app. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/inter/InterVariable.woff2') format('woff2');
+}
 
 /* ============================================
    EDUmind Design System - Motion App
@@ -159,6 +165,16 @@ a {
   color: var(--sub);
   transition: color 0.2s ease;
   font-weight: 500;
+}
+
+/* Los <button> de la barra heredaban el fondo gris del navegador: texto claro sobre
+   gris claro no llegaba a 4,5:1. Sin fondo ni borde, igual que los enlaces. */
+button.navbar__link {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
 }
 
 .navbar__link:hover {
@@ -408,6 +424,15 @@ a {
   font-weight: 600;
   color: var(--sub);
   white-space: nowrap;
+}
+
+.sidebar__field-label {
+  display: block;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--sub);
+  text-align: center;
+  margin-bottom: 4px;
 }
 
 .sidebar__select {
@@ -1039,6 +1064,16 @@ input[type='checkbox'] {
   color: var(--mint);
 }
 
+.guide__link {
+  margin: 0 0 16px 0;
+}
+
+.guide__link a {
+  color: var(--sky);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .guide summary {
   cursor: pointer;
   color: var(--sky);
@@ -1085,7 +1120,7 @@ kbd {
   background: linear-gradient(180deg, rgba(60, 125, 255, 0.25) 0%, rgba(25, 40, 66, 0.8) 100%);
   border: 1px solid rgba(60, 125, 255, 0.4);
   border-radius: 6px;
-  font-family: 'Geist Mono', monospace;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
   font-size: 11px;
   font-weight: 700;
   color: var(--ink);
@@ -2035,6 +2070,11 @@ body {
   overflow-y: hidden;
   padding-bottom: 6px;
   -webkit-overflow-scrolling: touch;
+}
+
+.timeline__scroller:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: -2px;
 }
 
 .timeline__scroller::-webkit-scrollbar {
@@ -3021,12 +3061,6 @@ body[data-ui-mode='advanced'] .beginner-only {
    2026-03-20 Aula / Pro Refinement
    ============================================ */
 
-.premium-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
 body[data-welcome='on'] {
   overflow: hidden;
 }
@@ -3038,52 +3072,6 @@ body[data-welcome='on'] .beginner-mode-toggle {
   filter: blur(8px);
   pointer-events: none;
   user-select: none;
-}
-
-.premium-card {
-  display: grid;
-  gap: 6px;
-  padding: 12px;
-  border-radius: 16px;
-  border: 1px solid rgba(115, 133, 168, 0.2);
-  background: linear-gradient(180deg, rgba(11, 18, 33, 0.92), rgba(8, 13, 23, 0.96));
-  color: #f5fbff;
-  text-align: left;
-  cursor: pointer;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.premium-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(61, 218, 215, 0.34);
-  box-shadow: 0 16px 28px rgba(3, 8, 22, 0.42);
-}
-
-.premium-card__icon {
-  font-size: 20px;
-}
-
-.premium-card__title {
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.premium-card__desc {
-  color: rgba(228, 237, 255, 0.62);
-  font-size: 12px;
-  line-height: 1.35;
-}
-
-.premium-card__meta {
-  color: var(--mint);
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.premium-card:not(.premium-card--available) .premium-card__meta {
-  color: #f0b35b;
 }
 
 body[data-ui-mode='advanced'] .header {
@@ -3676,10 +3664,6 @@ body[data-ui-mode='beginner'] .timeline .frame-card.is-selected {
 }
 
 @media (max-width: 900px) {
-  .premium-grid {
-    grid-template-columns: 1fr;
-  }
-
   .welcome-overlay__modes {
     grid-template-columns: 1fr;
   }

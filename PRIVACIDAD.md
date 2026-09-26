@@ -12,9 +12,17 @@ No es asesoramiento jurídico. Todo lo que se afirma aquí se puede comprobar en
 
 ### 2.1 Mientras se trabaja: solo en el navegador
 
-Los fotogramas, el proyecto y los ajustes viven en el almacenamiento del navegador. No se envían a ninguna parte.
+Los fotogramas, el proyecto y los ajustes viven en el almacenamiento del navegador. No se envían a ninguna parte. En concreto:
+
+| Dónde | Qué | Cuánto tiempo |
+|---|---|---|
+| IndexedDB `motion` (`src/storage.ts`) | fotogramas (imágenes de cámara o pictogramas), proyectos, pista de audio, metadatos | hasta que el usuario borra el proyecto, pulsa «Limpiar caché» o borra los datos del sitio en el navegador |
+| localStorage | ajustes (`motion_defaults`), cámara elegida (`motion_camera`), objetivo de fotos (`motion_frame_target`), bienvenida vista (`motion_welcome_dismissed`), aviso de grabación aceptado (`motion_media_consent_v1`), nivel de cuenta (`edumind_tier`) | igual |
+| sessionStorage | tokens y perfil OIDC (`name`, `preferred_username`, `email`) **solo tras iniciar sesión** | hasta cerrar la pestaña |
 
 **La cámara se usa en local.** El vídeo no se transmite: se capturan fotogramas y se quedan en el dispositivo.
+
+Las exportaciones (WebM, ZIP, JSON/NDJSON, PDF) se descargan al dispositivo y no llevan nombres de personas.
 
 ### 2.2 Si se guarda en la nube
 
@@ -32,19 +40,23 @@ El esquema completo está en [`server/db.js`](server/db.js): dos tablas, `projec
 
 **No se guarda nombre, apellidos, correo ni centro.** El servidor solo conoce el identificador opaco que emite Authentik.
 
+**Cuánto tiempo:** hasta que el propietario borra el proyecto desde la app (el borrado es real, `DELETE` en la base de datos, [`server/index.js`](server/index.js)). No hay purga automática. Ten en cuenta que los fotogramas son fotos de cámara y pueden contener caras: un proyecto marcado como público se sirve sin autenticación en la galería; no lo marques así si aparecen personas sin su permiso.
+
 ### 2.3 La galería
 
 Un proyecto solo aparece en la galería si alguien lo marca como público, y se puede volver a privado en cualquier momento. Los «me gusta» guardan qué cuenta ha dado el «me gusta» a qué proyecto, para no contarlos dos veces.
 
-## 3. Analítica
+## 3. Analítica y cargas de terceros
 
-La web carga **Matomo autoalojado** en los servidores de EDUmind, configurado así:
+**No hay analítica**: ni Matomo, ni Google Analytics, ni píxeles, ni contadores de ningún tipo (retirado en la versión 3.0.1). La tipografía Inter se sirve desde el propio sitio (`public/fonts/inter`), no desde Google Fonts. Al abrir la app, el navegador solo habla con el dominio que la sirve.
 
-- **sin cookies** (`disableCookies`)
-- respetando la señal **«No rastrear»** del navegador (`setDoNotTrack`)
-- solo cuenta visitas de página y clics en enlaces
+La app se comunica con otros dominios **únicamente cuando el usuario lo pide**:
 
-No hay Google Analytics, ni píxeles, ni terceros. Los datos no salen de la infraestructura de EDUmind. Si despliegas tu propia instancia, quita el bloque de Matomo de `index.html`: apunta al Matomo de EDUmind, no al tuyo.
+| Dominio | Cuándo | Qué se envía |
+|---|---|---|
+| `api.arasaac.org`, `static.arasaac.org` | al marcar «Buscar en ARASAAC online» en el selector de pictogramas | el término buscado; la petición lleva, como toda petición HTTP, la IP y el user-agent |
+| `auth.edumind.es` (Authentik) | al pulsar «Iniciar sesión» | flujo OIDC; Motion nunca ve la contraseña |
+| API de proyectos (`VITE_API_URL`, en la instancia de EDUmind `motion.edumind.es/motion-api`) | al guardar en la nube, abrir la galería o dar «me gusta», con sesión iniciada | lo descrito en 2.2 |
 
 ## 4. Autenticación
 
@@ -61,8 +73,8 @@ Sobre la instancia de EDUmind, escribe a **contacto@edumind.es**. Un proyecto se
 
 ## 7. Si despliegas tu propia instancia
 
-1. Quita el bloque de Matomo de `index.html`, o cámbialo por el tuyo.
-2. Configura tu propio proveedor OIDC en `server/.env`; los valores de ejemplo apuntan al de EDUmind.
+1. Configura tu propio proveedor OIDC en `server/.env` y en `.env.local` (variables `VITE_OIDC_*`); los valores de ejemplo apuntan al de EDUmind. Si no quieres nube ni galería, no definas `VITE_API_URL`.
+2. Si añades analítica, documéntala aquí: esta app se distribuye sin ninguna.
 3. Restringe `CORS_ORIGINS` a tu dominio.
 4. Pon la base de datos SQLite fuera del directorio servido por el servidor web y con copia de seguridad.
 5. Sirve todo por HTTPS: la cámara y el service worker no funcionan por HTTP salvo en `localhost`.

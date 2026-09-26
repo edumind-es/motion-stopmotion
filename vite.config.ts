@@ -55,7 +55,7 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,json,webmanifest,webp}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,json,webmanifest,webp,woff2}'],
         globIgnores: ['icons/logo-motion.png'],
         maximumFileSizeToCacheInBytes: 3000000,
         runtimeCaching: [
@@ -65,17 +65,6 @@ export default defineConfig({
             options: {
               cacheName: 'picto-catalogs'
             }
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\//,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'font-files',
-              expiration: {
-                maxEntries: 8,
-                maxAgeSeconds: 60 * 60 * 24 * 120
-              }
-            }
           }
         ]
       }
@@ -83,6 +72,11 @@ export default defineConfig({
   ],
   build: {
     rollupOptions: {
+      // La guía impresa del alumnado se publica junto a la app (dist/guia-alumnado.html)
+      input: {
+        main: 'index.html',
+        guia: 'guia-alumnado.html'
+      },
       output: {
         manualChunks(id) {
           if (!id.includes('node_modules')) return undefined

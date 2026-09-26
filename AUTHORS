@@ -1,21 +1,23 @@
-EDUmind - motion_v1
-===================================
+Motion — stop-motion educativo
+==============================
 
-AUTORES PRINCIPALES:
+AUTOR:
 
-Luis Vilela Acuña <contacto@edumind.es>
+Luis Vilela Acuña <contacto@edumind.es> · EDUmind®
   - Concepción original y arquitectura
-  - Desarrollo principal
+  - Desarrollo principal (con asistencia de IA, ver README «Hecho con IA»)
   - Diseño y UX
 
 CONTRIBUIDORES:
 
-[Lista de contribuidores]
+Ninguno externo por ahora. Las contribuciones aceptadas se listarán aquí con nombre
+y, si se desea, correo. Ver CONTRIBUTING.md.
 
 ---
 
 NOTA LEGAL:
-Todos los contribuidores aceptan que sus aportaciones se licencien
-bajo GNU AGPL v3.0 y que EDUmind mantenga la gestión del proyecto.
+Todos los contribuidores aceptan que sus aportaciones se licencien bajo la misma
+doble licencia del proyecto, AGPL-3.0-or-later o EUPL-1.2 a elección de quien reutilice
+(ver LICENSE), y que Luis Vilela Acuña mantenga la gestión del proyecto.
 El código es libre; la marca EDUmind® es propiedad de Luis Vilela Acuña
 y no se cede con el código (ver TRADEMARKS.md).
