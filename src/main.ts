@@ -111,6 +111,7 @@ app.innerHTML = `
 
       <div class="sidebar__section">
         <h5 class="sidebar__title">Cámara</h5>
+        <label for="cameraSelect" class="sidebar__field-label">Cámara activa</label>
         <select id="cameraSelect" class="sidebar__select" title="Seleccionar cámara"></select>
         <button class="sidebar__btn" id="rotate" title="Girar cámara">
           <span class="sidebar__icon">🔄</span>
@@ -125,12 +126,12 @@ app.innerHTML = `
       <div class="sidebar__section">
         <h5 class="sidebar__title">Ajustes</h5>
         <div class="sidebar__control">
-          <label class="sidebar__label-inline sidebar__label-inline--stack">
-            <span class="sidebar__icon">🎬</span>
-            <span>FPS</span>
+          <div class="sidebar__label-inline sidebar__label-inline--stack">
+            <span class="sidebar__icon" aria-hidden="true">🎬</span>
+            <label for="fps">Fotogramas por segundo (FPS)</label>
             <input type="range" id="fps" min="1" max="15" step="1" class="sidebar__slider" />
             <span class="sidebar__value" id="fpsValue">6 FPS</span>
-          </label>
+          </div>
         </div>
         <button class="sidebar__btn sidebar__btn--toggle" id="loopToggle" title="Reproducción en bucle">
           <span class="sidebar__icon">🔁</span>
@@ -141,6 +142,7 @@ app.innerHTML = `
           <span class="sidebar__label">Onion</span>
         </button>
         <div class="sidebar__control sidebar__control--sub">
+          <label for="onionOpacity" class="sidebar__field-label">Opacidad del onion skin</label>
           <input type="range" id="onionOpacity" min="0" max="1" step="0.05" class="sidebar__slider sidebar__slider--small" title="Opacidad del onion skin" />
         </div>
         <button class="sidebar__btn sidebar__btn--toggle" id="gridToggle" title="Mostrar rejilla de composición">
@@ -148,11 +150,11 @@ app.innerHTML = `
           <span class="sidebar__label">Rejilla</span>
         </button>
         <div class="sidebar__control">
-          <label class="sidebar__label-inline sidebar__label-inline--stack">
-            <span class="sidebar__icon">🔍</span>
-            <span>Zoom</span>
+          <div class="sidebar__label-inline sidebar__label-inline--stack">
+            <span class="sidebar__icon" aria-hidden="true">🔍</span>
+            <label for="zoomSlider">Zoom de la cámara</label>
             <input type="range" id="zoomSlider" min="1" max="3" step="0.1" class="sidebar__slider" />
-          </label>
+          </div>
         </div>
       </div>
 

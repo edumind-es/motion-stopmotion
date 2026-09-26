@@ -118,7 +118,7 @@ export class TimelineManager {
         </div>
       </div>
       <div class="timeline__viewport">
-        <div class="timeline__scroller">
+        <div class="timeline__scroller" tabindex="0" role="region" aria-label="Tira de fotogramas (se desplaza con las flechas)">
           <div class="timeline__inner" style="width:${totalWidth}px">
             <div class="timeline__ruler" aria-label="Regla temporal"></div>
             <div class="timeline__frames" aria-label="Fotogramas de la animación"></div>
@@ -156,7 +156,7 @@ export class TimelineManager {
         </div>
       </div>
       <div class="timeline__viewport timeline__viewport--filmstrip">
-        <div class="timeline__scroller">
+        <div class="timeline__scroller" tabindex="0" role="region" aria-label="Tira de fotogramas (se desplaza con las flechas)">
           <div class="timeline__inner timeline__inner--filmstrip">
             <div class="timeline__filmstrip-ruler" aria-label="Tiempo simplificado"></div>
             <div class="timeline__frames" aria-label="Fotogramas"></div>
@@ -212,7 +212,7 @@ export class TimelineManager {
         </div>
       </div>
       <div class="timeline__viewport timeline__viewport--filmstrip">
-        <div class="timeline__scroller">
+        <div class="timeline__scroller" tabindex="0" role="region" aria-label="Tira de fotogramas (se desplaza con las flechas)">
           <div class="timeline__inner timeline__inner--filmstrip">
             <div class="timeline__filmstrip-ruler" aria-label="Tiempo simplificado"></div>
             <div class="timeline__frames timeline__frames--placeholder" aria-label="Fotogramas"></div>
