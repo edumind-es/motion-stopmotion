@@ -537,6 +537,11 @@ footer.innerHTML = `
         /
         <a href="https://eupl.eu/1.2/es/" target="_blank" rel="noopener noreferrer">EUPL-1.2</a>
       </p>
+      <p class="footer-text footer-credits">
+        Pictogramas: autor Sergio Palao, origen <a href="http://www.arasaac.org" target="_blank" rel="noopener noreferrer">ARASAAC</a>,
+        licencia CC BY-NC-SA, propiedad Gobierno de Aragón (España) · Tipografía Inter (OFL 1.1) ·
+        <a href="https://github.com/edumind-es/motion-stopmotion/blob/main/CREDITS.md" target="_blank" rel="noopener noreferrer">Todos los créditos</a>
+      </p>
     </div>
 
     <div class="footer-links">
