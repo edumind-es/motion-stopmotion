@@ -2,7 +2,8 @@
   "name": "ARASAAC básico (catálogo de ejemplo)",
   "license": "CC BY-NC-SA 4.0",
   "attribution": "ARASAAC (http://www.arasaac.org) - Gobierno de Aragón",
-  "note": "Catálogo local con pictogramas ARASAAC descargados para uso sin conexión (CC BY-NC-SA 4.0). Los campos 'img' apuntan a PNG locales en /public/pictos/arasaac/.",
+  "note": "Catálogo local con pictogramas ARASAAC descargados para uso sin conexión (CC BY-NC-SA 4.0). Los campos 'img' apuntan a PNG locales en /public/pictos/arasaac/. Autor pictogramas: Sergio Palao. Origen: ARASAAC (http://www.arasaac.org). Licencia: CC BY-NC-SA. Propiedad: Gobierno de Aragón (España).",
+  "arasaacIds": {"feliz.png": 9907, "camara.png": 24925, "comer.png": 6456, "jugar.png": 23392, "escuela.png": 32446},
   "categories": [
     {
       "key": "emociones",

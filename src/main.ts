@@ -453,6 +453,7 @@ app.innerHTML = `
       <li><strong>Exporta:</strong> WebM para vídeo, ZIP para secuencia, JSON/NDJSON para guardar el proyecto.</li>
       <li><strong>Privacidad:</strong> todo queda en el dispositivo salvo que actives búsqueda remota de pictogramas.</li>
     </ul>
+    <p class="guide__link"><a href="./guia-alumnado.html" target="_blank" rel="noopener noreferrer">📖 Guía impresa para el alumnado (1.º y 3.º de Primaria)</a></p>
 
     <details open>
       <summary>⌨️ Atajos de teclado</summary>

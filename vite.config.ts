@@ -72,6 +72,11 @@ export default defineConfig({
   ],
   build: {
     rollupOptions: {
+      // La guía impresa del alumnado se publica junto a la app (dist/guia-alumnado.html)
+      input: {
+        main: 'index.html',
+        guia: 'guia-alumnado.html'
+      },
       output: {
         manualChunks(id) {
           if (!id.includes('node_modules')) return undefined

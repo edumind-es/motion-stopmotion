@@ -1045,6 +1045,16 @@ input[type='checkbox'] {
   color: var(--mint);
 }
 
+.guide__link {
+  margin: 0 0 16px 0;
+}
+
+.guide__link a {
+  color: var(--sky);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .guide summary {
   cursor: pointer;
   color: var(--sky);
